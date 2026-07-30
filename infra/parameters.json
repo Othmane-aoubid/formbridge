@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccountName": {
+      "value": "formbridgestorage"
+    },
+    "documentIntelligenceName": {
+      "value": "formbridge-di"
+    },
+    "searchServiceName": {
+      "value": "formbridge-search"
+    },
+    "cosmosDbAccountName": {
+      "value": "formbridge-cosmos"
+    },
+    "serviceBusNamespaceName": {
+      "value": "formbridge-sb"
+    },
+    "appServicePlanName": {
+      "value": "formbridge-asp"
+    },
+    "webAppName": {
+      "value": "formbridge-api"
+    },
+    "staticWebAppName": {
+      "value": "formbridge-web"
+    }
+  }
+}
