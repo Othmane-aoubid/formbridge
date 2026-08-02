@@ -34,6 +34,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
       setUser(userData);
     } catch (err) {
       console.error('Failed to load user');
+      if (pathname !== '/') {
+        window.location.href = '/';
+      }
     }
   }
 

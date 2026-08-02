@@ -51,12 +51,7 @@ export default function DocumentProcessingPage() {
   async function handleReprocess() {
     setProcessing(true);
     try {
-      await fetch(`http://localhost:8000/api/documents/${documentId}/process`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiClient.getToken()}`,
-        },
-      });
+      await apiClient.reprocessDocument(documentId);
       loadDocument();
     } catch (err) {
       console.error('Failed to reprocess document');
@@ -161,6 +156,47 @@ export default function DocumentProcessingPage() {
                   {processing ? 'Processing...' : 'Reprocess Document'}
                 </button>
               </div>
+
+              {/* Document Preview */}
+              {document.status !== 'processing' && (
+                <div className="mt-6 border-t border-gray-200 pt-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Document Preview</h3>
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <iframe
+                      src={(document as any).previewUrl || ''}
+                      className="w-full h-96"
+                      title="Document Preview"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* OCR Text */}
+              {document.status !== 'processing' && (document as any).ocrText && (
+                <div className="mt-6 border-t border-gray-200 pt-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">OCR Text</h3>
+                  <div className="border rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+                    <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                      {(document as any).ocrText}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {/* Extracted Fields */}
+              {document.status !== 'processing' && (document as any).extractedFields && Object.keys((document as any).extractedFields).length > 0 && (
+                <div className="mt-6 border-t border-gray-200 pt-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Extracted Fields</h3>
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    {Object.entries((document as any).extractedFields).map(([key, value]) => (
+                      <div key={key} className="mb-2">
+                        <span className="font-medium text-gray-700">{key}:</span>
+                        <span className="ml-2 text-gray-600">{Array.isArray(value) ? JSON.stringify(value) : String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -50,6 +50,15 @@ class AIExtractionService:
             
             # Parse the JSON response
             try:
+                # Strip markdown code blocks if present
+                if content.startswith('```json'):
+                    content = content[7:]  # Remove ```json
+                if content.startswith('```'):
+                    content = content[3:]  # Remove ```
+                if content.endswith('```'):
+                    content = content[:-3]  # Remove closing ```
+                content = content.strip()
+                
                 extracted_fields = json.loads(content)
                 logger.info(f"Successfully extracted {len(extracted_fields)} fields using NVIDIA NIM")
                 return extracted_fields

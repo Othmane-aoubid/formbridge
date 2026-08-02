@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field, RootModel
+from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 from enum import Enum
 
@@ -29,19 +29,12 @@ class LineItem(BaseModel):
     amount: float
 
 
-class ExtractedFields(BaseModel):
-    vendor_name: Optional[str] = Field(None, alias="vendorName")
-    invoice_number: Optional[str] = Field(None, alias="invoiceNumber")
-    invoice_date: Optional[str] = Field(None, alias="invoiceDate")
-    total_amount: Optional[float] = Field(None, alias="totalAmount")
-    currency: Optional[str] = "USD"
-    line_items: List[LineItem] = Field(default_factory=list, alias="lineItems")
+class ExtractedFields(RootModel[Dict[str, Any]]):
+    pass
 
 
-class ConfidenceScores(BaseModel):
-    vendor_name: Optional[float] = Field(None, alias="vendorName")
-    invoice_number: Optional[float] = Field(None, alias="invoiceNumber")
-    total_amount: Optional[float] = Field(None, alias="totalAmount")
+class ConfidenceScores(RootModel[Dict[str, float]]):
+    pass
 
 
 class AuditEntry(BaseModel):
@@ -75,6 +68,9 @@ class DocumentResponse(BaseModel):
     processing_started_at: Optional[datetime] = Field(None, alias="processingStartedAt")
     processing_completed_at: Optional[datetime] = Field(None, alias="processingCompletedAt")
     processing_error: Optional[str] = Field(None, alias="processingError")
+    ocr_text: Optional[str] = Field(None, alias="ocrText")
+    tables: Optional[List[Dict[str, Any]]] = Field(None, alias="tables")
+    key_value_pairs: Optional[Dict[str, str]] = Field(None, alias="keyValuePairs")
 
     class Config:
         populate_by_name = True

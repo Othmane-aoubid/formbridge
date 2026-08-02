@@ -80,7 +80,7 @@ class ProcessingService:
                 # Check if it's a rate limit error or Azure service unavailable
                 error_str = str(azure_error).lower()
                 if "rate limit" in error_str or "429" in error_str or "quota" in error_str or "limit" in error_str:
-                    if settings.nvidia_api_key:
+                    if settings.nvidia_nim_api_key:
                         await self._update_progress(document_id, 25, "Rate limit reached, switching to NVIDIA API")
                         logger.warning(f"Azure rate limit reached, falling back to NVIDIA API: {str(azure_error)}")
                         analysis_result = await self._process_with_nvidia(document_id, blob_sas_url, document.document_type.value)
@@ -359,7 +359,7 @@ class ProcessingService:
             # Call NVIDIA API for document processing
             nvidia_api_url = "https://integrate.api.nvidia.com/v1/vision/nvidia/llama-3.2-90b-vision-instruct"
             headers = {
-                "Authorization": f"Bearer {settings.nvidia_api_key}",
+                "Authorization": f"Bearer {settings.nvidia_nim_api_key}",
                 "Content-Type": "application/json"
             }
 
@@ -367,7 +367,7 @@ class ProcessingService:
             prompt = f"Extract structured data from this {document_type} document. Return JSON with fields like vendor name, invoice number, date, total amount, line items, etc."
 
             payload = {
-                "model": "llama-3.2-90b-vision-instruct",
+                "model": settings.nvidia_nim_model,
                 "messages": [
                     {
                         "role": "user",

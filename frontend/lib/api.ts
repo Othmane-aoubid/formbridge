@@ -272,6 +272,33 @@ class ApiClient {
       }
     );
   }
+
+  async reprocessDocument(documentId: string): Promise<{ message: string; documentId: string }> {
+    return this.request<{ message: string; documentId: string }>(
+      `/api/documents/${documentId}/reprocess`,
+      {
+        method: 'POST',
+      }
+    );
+  }
+
+  async deleteDocument(documentId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(
+      `/api/documents/${documentId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+  }
+
+  async stopProcessing(documentId: string): Promise<{ message: string; documentId: string }> {
+    return this.request<{ message: string; documentId: string }>(
+      `/api/documents/${documentId}/stop`,
+      {
+        method: 'POST',
+      }
+    );
+  }
 }
 
 export const apiClient = new ApiClient();

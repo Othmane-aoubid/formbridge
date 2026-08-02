@@ -102,7 +102,13 @@ class DocumentService:
         try:
             item = self.container.read_item(item=document_id, partition_key=document_id)
             item.update(updates)
-            
+
+            # Convert RootModel objects to dicts for JSON serialization
+            if "extractedFields" in item and hasattr(item["extractedFields"], "model_dump"):
+                item["extractedFields"] = item["extractedFields"].model_dump()
+            if "confidenceScores" in item and hasattr(item["confidenceScores"], "model_dump"):
+                item["confidenceScores"] = item["confidenceScores"].model_dump()
+
             # Add audit entry
             if "audit" in item:
                 item["audit"].append({
@@ -110,12 +116,12 @@ class DocumentService:
                     "action": "update",
                     "timestamp": datetime.utcnow().isoformat()
                 })
-            
+
             updated_item = self.container.replace_item(item=document_id, body=item)
             logger.info(f"Updated document {document_id}")
-            
+
             return DocumentResponse(**updated_item)
-            
+
         except Exception as e:
             logger.error(f"Error updating document {document_id}: {str(e)}")
             return None

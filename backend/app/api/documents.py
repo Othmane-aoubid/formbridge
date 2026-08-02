@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from typing import Dict, Optional
 import uuid
+import asyncio
 from app.models.document import DocumentCreate, DocumentResponse, UploadSasResponse
 from app.services.storage_service import StorageService
 from app.services.document_service import DocumentService
+from app.services.processing_service import ProcessingService
 from app.core.config import settings
 
 router = APIRouter()
@@ -11,6 +13,7 @@ router = APIRouter()
 # Initialize services (in production, use dependency injection)
 storage_service = StorageService()
 document_service = DocumentService()
+processing_service = ProcessingService()
 
 
 @router.post("/upload")
@@ -51,6 +54,9 @@ async def upload_document(
         created_by="user"
     )
     
+    # Trigger processing in background
+    asyncio.create_task(processing_service.process_document(document_id))
+    
     return document
 
 
@@ -74,6 +80,9 @@ async def complete_upload(
         document_type=document_type,
         created_by="user"
     )
+    
+    # Trigger processing in background
+    asyncio.create_task(processing_service.process_document(document_id))
     
     return document
 
@@ -128,3 +137,52 @@ async def search_documents(
         "skip": skip,
         "limit": limit
     }
+
+
+@router.post("/{document_id}/reprocess")
+async def reprocess_document(document_id: str) -> Dict[str, str]:
+    """
+    Trigger reprocessing of a document
+    """
+    document = await document_service.get_document(document_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Reset processing status
+    await document_service.update_document(
+        document_id,
+        {
+            "status": "processing",
+            "processingProgress": 0,
+            "processingStep": "Reprocessing",
+            "processingError": None
+        }
+    )
+    
+    # Trigger processing in background
+    asyncio.create_task(processing_service.process_document(document_id))
+    
+    return {"message": "Document reprocessing started", "document_id": document_id}
+
+
+@router.post("/{document_id}/stop")
+async def stop_processing(document_id: str) -> Dict[str, str]:
+    """
+    Stop processing of a document
+    """
+    document = await document_service.get_document(document_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Update status to indicate processing was stopped
+    await document_service.update_document(
+        document_id,
+        {
+            "status": "failed",
+            "processingProgress": 0,
+            "processingStep": "Stopped",
+            "processingError": "Processing stopped by user"
+        }
+    )
+    
+    return {"message": "Document processing stopped", "document_id": document_id}

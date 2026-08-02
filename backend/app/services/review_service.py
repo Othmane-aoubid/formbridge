@@ -1,5 +1,6 @@
 from typing import Optional, List
 from app.services.document_service import DocumentService
+from app.services.storage_service import StorageService
 from app.models.review import ReviewQueueItem, ReviewResponse
 from app.models.document import DocumentStatus
 import logging
@@ -10,6 +11,7 @@ logger = logging.getLogger(__name__)
 class ReviewService:
     def __init__(self):
         self.document_service = DocumentService()
+        self.storage_service = StorageService()
     
     async def get_review_queue(
         self,
@@ -69,20 +71,27 @@ class ReviewService:
             document = await self.document_service.get_document(document_id)
             if not document:
                 return None
-            
-            # Generate preview URL (in production, this would be a thumbnail service)
-            preview_url = document.blob_uri
-            
+
+            # Generate preview URL with SAS token for read access
+            preview_url = await self.storage_service.generate_download_sas(document.blob_uri)
+
+            # Filter out None values from confidence_scores
+            filtered_confidence_scores = {
+                k: v for k, v in document.confidence_scores.model_dump().items()
+                if v is not None
+            }
+
             return ReviewResponse(
                 document_id=document.id,
                 filename=document.filename,
                 blob_uri=document.blob_uri,
                 preview_url=preview_url,
-                extracted_fields=document.extracted_fields,
-                confidence_scores=document.confidence_scores.dict(),
-                status=document.status
+                extracted_fields=document.extracted_fields.model_dump(),
+                confidence_scores=filtered_confidence_scores,
+                status=document.status,
+                ocr_text=document.ocr_text if hasattr(document, 'ocr_text') else ""
             )
-            
+
         except Exception as e:
             logger.error(f"Error getting review document {document_id}: {str(e)}")
             return None

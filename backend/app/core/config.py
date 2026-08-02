@@ -38,10 +38,14 @@ class Settings(BaseSettings):
     # Authentication
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
-    jwt_access_token_expire_minutes: int = 30
+    jwt_access_token_expire_minutes: int = 480
     
     # CORS
     cors_origins: list = ["http://localhost:3000", "http://localhost:8000"]
+    
+    # NVIDIA NIM API (optional fallback)
+    nvidia_nim_api_key: Optional[str] = None
+    nvidia_nim_model: str = "deepseek-ai/deepseek-v4-pro"
     
     class Config:
         env_file = ".env"

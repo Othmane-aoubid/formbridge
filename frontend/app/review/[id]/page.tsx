@@ -14,6 +14,7 @@ export default function ReviewDetailPage() {
   const [document, setDocument] = useState<ReviewResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [comments, setComments] = useState('');
   const [extractedFields, setExtractedFields] = useState<ReviewResponse['extractedFields']>({});
 
@@ -103,6 +104,20 @@ export default function ReviewDetailPage() {
               </div>
             </div>
 
+            {/* OCR Text */}
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h2 className="text-lg font-medium text-gray-900 mb-4">
+                  OCR Text
+                </h2>
+                <div className="border rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+                  <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                    {(document as any).ocrText || 'No OCR text available'}
+                  </pre>
+                </div>
+              </div>
+            </div>
+
             {/* Review Form */}
             <div className="bg-white shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
@@ -183,6 +198,24 @@ export default function ReviewDetailPage() {
                       className="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {saving ? 'Submitting...' : 'Submit Review'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setRetrying(true);
+                        try {
+                          await apiClient.reprocessDocument(documentId);
+                          await loadDocument();
+                        } catch (error) {
+                          console.error('Failed to retry:', error);
+                        } finally {
+                          setRetrying(false);
+                        }
+                      }}
+                      disabled={retrying}
+                      className="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {retrying ? 'Retrying...' : 'Retry'}
                     </button>
                     <button
                       type="button"

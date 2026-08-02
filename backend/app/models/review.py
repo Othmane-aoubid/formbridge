@@ -32,6 +32,7 @@ class ReviewResponse(BaseModel):
     extracted_fields: ExtractedFields = Field(alias="extractedFields")
     confidence_scores: Dict[str, float] = Field(alias="confidenceScores")
     status: DocumentStatus
+    ocr_text: Optional[str] = Field(alias="ocrText", default="")
     
     class Config:
         populate_by_name = True

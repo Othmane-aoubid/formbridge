@@ -22,8 +22,22 @@ export default function ReviewQueuePage() {
       const params: any = {};
       if (documentType) params.documentType = documentType;
       if (status) params.status = status;
-      const response = await apiClient.getReviewQueue(params);
-      setQueue(response.queue);
+      
+      // If no filters applied, show all documents
+      if (!documentType && !status) {
+        const docsResponse = await apiClient.searchDocuments({ limit: 50 });
+        setQueue(docsResponse.results.map((doc: any) => ({
+          documentId: doc.id,
+          filename: doc.filename,
+          documentType: doc.documentType,
+          status: doc.status,
+          confidenceScore: 0,
+          createdAt: doc.createdAt
+        })));
+      } else {
+        const response = await apiClient.getReviewQueue(params);
+        setQueue(response.queue);
+      }
     } catch (error) {
       console.error('Failed to load review queue:', error);
     } finally {

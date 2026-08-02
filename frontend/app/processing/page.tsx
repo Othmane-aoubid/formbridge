@@ -18,7 +18,7 @@ export default function ProcessingPage() {
 
   async function loadDocuments() {
     try {
-      const docsResponse = await apiClient.searchDocuments({ limit: 50 });
+      const docsResponse = await apiClient.searchDocuments({ limit: 50, status: 'processing' });
       setDocuments(docsResponse.results || []);
     } catch (err) {
       console.error('Failed to load documents');
@@ -28,7 +28,23 @@ export default function ProcessingPage() {
   }
 
   async function handleReprocess(documentId: string) {
-    window.location.href = `/processing/${documentId}`;
+    try {
+      await apiClient.reprocessDocument(documentId);
+      loadDocuments();
+    } catch (error) {
+      console.error('Failed to reprocess document:', error);
+      alert('Failed to reprocess document');
+    }
+  }
+
+  async function handleStopProcessing(documentId: string) {
+    try {
+      await apiClient.stopProcessing(documentId);
+      loadDocuments();
+    } catch (error) {
+      console.error('Failed to stop processing:', error);
+      alert('Failed to stop processing');
+    }
   }
 
   async function handleDelete(documentId: string, filename: string) {
@@ -132,12 +148,20 @@ export default function ProcessingPage() {
                       <p className="text-sm font-medium text-gray-900">{doc.filename}</p>
                       <p className="text-xs text-gray-500">Processing...</p>
                     </div>
-                    <Link
-                      href={`/processing/${doc.id}`}
-                      className="text-blue-600 hover:text-blue-900 text-sm"
-                    >
-                      View Status
-                    </Link>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => handleStopProcessing(doc.id)}
+                        className="px-3 py-1 text-xs font-medium text-red-600 hover:text-red-800 border border-red-600 rounded"
+                      >
+                        Stop
+                      </button>
+                      <Link
+                        href={`/processing/${doc.id}`}
+                        className="text-blue-600 hover:text-blue-900 text-sm"
+                      >
+                        View Status
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>

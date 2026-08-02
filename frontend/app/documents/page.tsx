@@ -24,6 +24,39 @@ export default function DocumentsPage() {
     }
   }
 
+  async function handleReprocess(documentId: string) {
+    try {
+      await apiClient.reprocessDocument(documentId);
+      window.location.href = `/review/${documentId}`;
+    } catch (error) {
+      console.error('Failed to reprocess document:', error);
+      alert('Failed to reprocess document');
+    }
+  }
+
+  async function handleStopProcessing(documentId: string) {
+    try {
+      await apiClient.stopProcessing(documentId);
+      loadDocuments();
+    } catch (error) {
+      console.error('Failed to stop processing:', error);
+      alert('Failed to stop processing');
+    }
+  }
+
+  async function handleDelete(documentId: string) {
+    if (!confirm('Are you sure you want to delete this document?')) {
+      return;
+    }
+    try {
+      await apiClient.deleteDocument(documentId);
+      setDocuments(documents.filter(doc => doc.id !== documentId));
+    } catch (error) {
+      console.error('Failed to delete document:', error);
+      alert('Failed to delete document');
+    }
+  }
+
   return (
     <AppLayout>
       <div className="px-4 sm:px-6 lg:px-8 py-8">
@@ -71,7 +104,28 @@ export default function DocumentsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(doc.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <button
+                          onClick={() => handleReprocess(doc.id)}
+                          disabled={doc.status === 'processing'}
+                          className={doc.status === 'processing' ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-900'}
+                        >
+                          Reprocess
+                        </button>
+                        <button
+                          onClick={() => handleStopProcessing(doc.id)}
+                          disabled={doc.status !== 'processing'}
+                          className={doc.status !== 'processing' ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}
+                        >
+                          Stop
+                        </button>
+                        <button
+                          onClick={() => handleDelete(doc.id)}
+                          disabled={doc.status === 'processing'}
+                          className={doc.status === 'processing' ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}
+                        >
+                          Delete
+                        </button>
                         <Link href={`/review/${doc.id}`} className="text-blue-600 hover:text-blue-900">
                           Review
                         </Link>
