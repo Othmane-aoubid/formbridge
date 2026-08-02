@@ -8,6 +8,8 @@ import AppLayout from '@/components/AppLayout';
 export default function ReviewQueuePage() {
   const [queue, setQueue] = useState<ReviewQueueItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [documentType, setDocumentType] = useState<string>('');
   const [status, setStatus] = useState<string>('');
   const [createdDate, setCreatedDate] = useState<string>('');
@@ -52,16 +54,39 @@ export default function ReviewQueuePage() {
 
     try {
       await apiClient.deleteDocument(documentId);
+      setSuccess('Document deleted successfully');
       setQueue(queue.filter(item => item.documentId !== documentId));
     } catch (error) {
       console.error('Failed to delete document:', error);
-      alert('Failed to delete document');
+      setError('Failed to delete document');
     }
   }
 
   return (
     <AppLayout>
       <div className="px-4 sm:px-6 lg:px-8 py-8">
+        {error && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+            <span className="block sm:inline">{error}</span>
+            <button
+              onClick={() => setError('')}
+              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+            >
+              <span className="text-red-500">&times;</span>
+            </button>
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative">
+            <span className="block sm:inline">{success}</span>
+            <button
+              onClick={() => setSuccess('')}
+              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+            >
+              <span className="text-green-500">&times;</span>
+            </button>
+          </div>
+        )}
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
 

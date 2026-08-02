@@ -71,6 +71,7 @@ class DocumentResponse(BaseModel):
     ocr_text: Optional[str] = Field(None, alias="ocrText")
     tables: Optional[List[Dict[str, Any]]] = Field(None, alias="tables")
     key_value_pairs: Optional[Dict[str, str]] = Field(None, alias="keyValuePairs")
+    preview_url: Optional[str] = Field(None, alias="previewUrl")
 
     class Config:
         populate_by_name = True

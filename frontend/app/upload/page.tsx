@@ -27,6 +27,9 @@ export default function UploadPage() {
 
       setMessage(`Document uploaded successfully! Document ID: ${document.id}`);
       setFile(null);
+
+      // Navigate to processing page
+      window.location.href = `/processing/${document.id}`;
     } catch (error) {
       setMessage(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {

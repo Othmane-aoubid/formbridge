@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from azure.cosmos import CosmosClient, PartitionKey
 from app.core.config import settings
 from app.models.document import DocumentResponse, DocumentStatus, DocumentType
@@ -42,7 +42,7 @@ class DocumentService:
         blob_uri: str,
         filename: str,
         content_type: str,
-        document_type: DocumentType,
+        document_type: Union[DocumentType, str],
         tenant_id: Optional[str] = None,
         created_by: Optional[str] = None
     ) -> DocumentResponse:
@@ -50,6 +50,10 @@ class DocumentService:
         Create a new document record
         """
         try:
+            # Convert string to DocumentType if needed
+            if isinstance(document_type, str):
+                document_type = DocumentType(document_type)
+
             document = {
                 "id": document_id,
                 "tenantId": tenant_id,
@@ -143,6 +147,18 @@ class DocumentService:
             }
         )
     
+    async def delete_document(self, document_id: str) -> bool:
+        """
+        Delete a document from Cosmos DB
+        """
+        try:
+            self.container.delete_item(item=document_id, partition_key=document_id)
+            logger.info(f"Deleted document {document_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Error deleting document {document_id}: {str(e)}")
+            return False
+
     async def search_documents(
         self,
         query: Optional[str] = None,
@@ -157,21 +173,21 @@ class DocumentService:
         try:
             query_string = "SELECT * FROM c WHERE 1=1"
             parameters = []
-            
+
             if query:
                 query_string += " AND CONTAINS(c.filename, @query)"
                 parameters.append({"name": "@query", "value": query})
-            
+
             if document_type:
                 query_string += " AND c.documentType = @documentType"
                 parameters.append({"name": "@documentType", "value": document_type})
-            
+
             if status:
                 query_string += " AND c.status = @status"
                 parameters.append({"name": "@status", "value": status})
-            
+
             query_string += f" ORDER BY c.createdAt DESC OFFSET {skip} LIMIT {limit}"
-            
+
             items = list(self.container.query_items(
                 query=query_string,
                 parameters=parameters,

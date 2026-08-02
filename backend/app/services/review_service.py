@@ -74,6 +74,7 @@ class ReviewService:
 
             # Generate preview URL with SAS token for read access
             preview_url = await self.storage_service.generate_download_sas(document.blob_uri)
+            logger.info(f"Generated preview URL for document {document_id}: {preview_url}")
 
             # Filter out None values from confidence_scores
             filtered_confidence_scores = {

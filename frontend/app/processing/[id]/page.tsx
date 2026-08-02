@@ -162,11 +162,17 @@ export default function DocumentProcessingPage() {
                 <div className="mt-6 border-t border-gray-200 pt-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Document Preview</h3>
                   <div className="border rounded-lg p-4 bg-gray-50">
-                    <iframe
-                      src={(document as any).previewUrl || ''}
-                      className="w-full h-96"
-                      title="Document Preview"
-                    />
+                    {(document as any).previewUrl ? (
+                      <iframe
+                        src={(document as any).previewUrl}
+                        className="w-full h-96"
+                        title="Document Preview"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-96 text-gray-500">
+                        Preview not available
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

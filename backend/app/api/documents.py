@@ -96,7 +96,14 @@ async def get_document(document_id: str) -> DocumentResponse:
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
     
-    return document
+    # Generate preview URL with SAS token
+    preview_url = await storage_service.generate_download_sas(document.blob_uri)
+    
+    # Add preview_url to response (it's not in the DocumentResponse model but will be included in the dict)
+    document_dict = document.model_dump()
+    document_dict["previewUrl"] = preview_url
+    
+    return DocumentResponse(**document_dict)
 
 
 @router.get("/{document_id}/download")
@@ -173,7 +180,7 @@ async def stop_processing(document_id: str) -> Dict[str, str]:
     document = await document_service.get_document(document_id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
-    
+
     # Update status to indicate processing was stopped
     await document_service.update_document(
         document_id,
@@ -184,5 +191,27 @@ async def stop_processing(document_id: str) -> Dict[str, str]:
             "processingError": "Processing stopped by user"
         }
     )
-    
+
     return {"message": "Document processing stopped", "document_id": document_id}
+
+
+@router.delete("/{document_id}")
+async def delete_document(document_id: str) -> Dict[str, str]:
+    """
+    Delete a document
+    """
+    document = await document_service.get_document(document_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    # Delete document from Cosmos DB
+    await document_service.delete_document(document_id)
+
+    # Delete blob from Azure Storage
+    try:
+        await storage_service.delete_blob(document.blob_uri)
+    except Exception as e:
+        # Log error but don't fail the delete if blob deletion fails
+        pass
+
+    return {"message": "Document deleted successfully", "document_id": document_id}

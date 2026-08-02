@@ -8,6 +8,8 @@ import AppLayout from '@/components/AppLayout';
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     loadDocuments();
@@ -17,8 +19,10 @@ export default function DocumentsPage() {
     try {
       const docsResponse = await apiClient.searchDocuments({ limit: 50 });
       setDocuments(docsResponse.results || []);
+      setError('');
     } catch (err) {
       console.error('Failed to load documents');
+      setError('Failed to load documents');
     } finally {
       setLoading(false);
     }
@@ -30,17 +34,18 @@ export default function DocumentsPage() {
       window.location.href = `/review/${documentId}`;
     } catch (error) {
       console.error('Failed to reprocess document:', error);
-      alert('Failed to reprocess document');
+      setError('Failed to reprocess document');
     }
   }
 
   async function handleStopProcessing(documentId: string) {
     try {
       await apiClient.stopProcessing(documentId);
+      setSuccess('Processing stopped successfully');
       loadDocuments();
     } catch (error) {
       console.error('Failed to stop processing:', error);
-      alert('Failed to stop processing');
+      setError('Failed to stop processing');
     }
   }
 
@@ -50,16 +55,39 @@ export default function DocumentsPage() {
     }
     try {
       await apiClient.deleteDocument(documentId);
+      setSuccess('Document deleted successfully');
       setDocuments(documents.filter(doc => doc.id !== documentId));
     } catch (error) {
       console.error('Failed to delete document:', error);
-      alert('Failed to delete document');
+      setError('Failed to delete document');
     }
   }
 
   return (
     <AppLayout>
       <div className="px-4 sm:px-6 lg:px-8 py-8">
+        {error && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+            <span className="block sm:inline">{error}</span>
+            <button
+              onClick={() => setError('')}
+              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+            >
+              <span className="text-red-500">&times;</span>
+            </button>
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative">
+            <span className="block sm:inline">{success}</span>
+            <button
+              onClick={() => setSuccess('')}
+              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+            >
+              <span className="text-green-500">&times;</span>
+            </button>
+          </div>
+        )}
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

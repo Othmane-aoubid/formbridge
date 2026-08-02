@@ -9,6 +9,8 @@ export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [documentType, setDocumentType] = useState<string>('');
   const [status, setStatus] = useState<string>('');
 
@@ -45,16 +47,39 @@ export default function SearchPage() {
 
     try {
       await apiClient.deleteDocument(documentId);
+      setSuccess('Document deleted successfully');
       setResults(results.filter(doc => doc.id !== documentId));
     } catch (error) {
       console.error('Failed to delete document:', error);
-      alert('Failed to delete document');
+      setError('Failed to delete document');
     }
   }
 
   return (
     <AppLayout>
       <div className="px-4 sm:px-6 lg:px-8 py-8">
+        {error && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+            <span className="block sm:inline">{error}</span>
+            <button
+              onClick={() => setError('')}
+              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+            >
+              <span className="text-red-500">&times;</span>
+            </button>
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative">
+            <span className="block sm:inline">{success}</span>
+            <button
+              onClick={() => setSuccess('')}
+              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+            >
+              <span className="text-green-500">&times;</span>
+            </button>
+          </div>
+        )}
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Search Documents</h1>

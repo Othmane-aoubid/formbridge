@@ -101,15 +101,37 @@ class StorageService:
                 container=destination_container,
                 blob=source_blob
             )
-            
+
             # Copy blob to destination
             dest_client.start_copy_from_url(source_client.url)
-            
+
             # Delete source after copy
             source_client.delete_blob()
-            
+
             logger.info(f"Moved blob from {source_container} to {destination_container}")
-            
+
         except Exception as e:
             logger.error(f"Error moving blob: {str(e)}")
+            raise
+
+    async def delete_blob(self, blob_uri: str) -> None:
+        """
+        Delete a blob from Azure Storage
+        """
+        try:
+            # Parse blob URI to extract container and blob name
+            uri_parts = blob_uri.replace(f"{settings.azure_storage_account_url}/", "").split("/")
+            container_name = uri_parts[0]
+            blob_name = "/".join(uri_parts[1:])
+
+            blob_client = self.blob_service_client.get_blob_client(
+                container=container_name,
+                blob=blob_name
+            )
+
+            blob_client.delete_blob()
+            logger.info(f"Deleted blob {blob_name} from container {container_name}")
+
+        except Exception as e:
+            logger.error(f"Error deleting blob: {str(e)}")
             raise

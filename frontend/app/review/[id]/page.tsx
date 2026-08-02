@@ -15,6 +15,8 @@ export default function ReviewDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [comments, setComments] = useState('');
   const [extractedFields, setExtractedFields] = useState<ReviewResponse['extractedFields']>({});
 
@@ -50,7 +52,7 @@ export default function ReviewDetailPage() {
       router.push('/review');
     } catch (error) {
       console.error('Failed to submit review:', error);
-      alert('Failed to submit review');
+      setError('Failed to submit review');
     } finally {
       setSaving(false);
     }
@@ -87,6 +89,28 @@ export default function ReviewDetailPage() {
     <AppLayout>
       <div className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+              <span className="block sm:inline">{error}</span>
+              <button
+                onClick={() => setError('')}
+                className="absolute top-0 bottom-0 right-0 px-4 py-3"
+              >
+                <span className="text-red-500">&times;</span>
+              </button>
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative">
+              <span className="block sm:inline">{success}</span>
+              <button
+                onClick={() => setSuccess('')}
+                className="absolute top-0 bottom-0 right-0 px-4 py-3"
+              >
+                <span className="text-green-500">&times;</span>
+              </button>
+            </div>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Document Preview */}
             <div className="bg-white shadow rounded-lg">
@@ -95,11 +119,17 @@ export default function ReviewDetailPage() {
                   Document Preview
                 </h2>
                 <div className="border rounded-lg p-4 bg-gray-50">
-                  <iframe
-                    src={document.previewUrl}
-                    className="w-full h-96"
-                    title="Document Preview"
-                  />
+                  {document.previewUrl ? (
+                    <iframe
+                      src={document.previewUrl}
+                      className="w-full h-96"
+                      title="Document Preview"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-96 text-gray-500">
+                      Preview not available
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

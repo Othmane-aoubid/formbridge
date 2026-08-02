@@ -53,12 +53,15 @@ class OCRService:
                         confidence_scores["invoiceDate"] = doc.fields["InvoiceDate"].confidence
                     
                     if "TotalTax" in doc.fields:
-                        extracted_fields["totalAmount"] = float(doc.fields["TotalTax"].content)
+                        # Strip currency symbols and convert to float
+                        amount_str = doc.fields["TotalTax"].content
+                        amount_str = amount_str.replace('$', '').replace(',', '').strip()
+                        extracted_fields["totalAmount"] = float(amount_str)
                         confidence_scores["totalAmount"] = doc.fields["TotalTax"].confidence
                     
                     if "Items" in doc.fields:
                         line_items = []
-                        for item in doc.fields["Items"].values:
+                        for item in doc.fields["Items"].values():
                             line_item = {
                                 "description": item.get("Description", {}).content if "Description" in item else "",
                                 "qty": item.get("Quantity", {}).value if "Quantity" in item else 1,
