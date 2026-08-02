@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import HoneybadgerProvider from './honeybadger-provider';
+import '../honeybadger.server.config';
+import { NotificationProvider } from '@/components/NotificationContext';
 
 export const metadata: Metadata = {
   title: "FormBridge - Document Processing Platform",
@@ -13,7 +16,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <NotificationProvider>
+          <HoneybadgerProvider>
+            {children}
+          </HoneybadgerProvider>
+        </NotificationProvider>
+      </body>
     </html>
   );
 }

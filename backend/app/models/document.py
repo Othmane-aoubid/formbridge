@@ -18,6 +18,8 @@ class DocumentStatus(str, Enum):
     validated = "validated"
     exported = "exported"
     archived = "archived"
+    completed = "completed"
+    failed = "failed"
 
 
 class LineItem(BaseModel):
@@ -68,7 +70,12 @@ class DocumentResponse(BaseModel):
     created_by: Optional[str] = Field(None, alias="createdBy")
     created_at: datetime = Field(alias="createdAt")
     audit: List[AuditEntry] = Field(default_factory=list)
-    
+    processing_progress: Optional[int] = Field(0, alias="processingProgress")
+    processing_step: Optional[str] = Field(None, alias="processingStep")
+    processing_started_at: Optional[datetime] = Field(None, alias="processingStartedAt")
+    processing_completed_at: Optional[datetime] = Field(None, alias="processingCompletedAt")
+    processing_error: Optional[str] = Field(None, alias="processingError")
+
     class Config:
         populate_by_name = True
 
