@@ -86,6 +86,12 @@ jobs:
 
       - name: Print Client ID
         run: echo "${{ secrets.AZUREAPPSERVICE_CLIENTID_E02800B5F893472DAEA6DA6AA3495445 }}"
+        
+      - name: Verify secrets
+        run: |
+              echo "CLIENT=${{ secrets.AZUREAPPSERVICE_CLIENTID_E02800B5F893472DAEA6DA6AA3495445 }}"
+              echo "TENANT=${{ secrets.AZUREAPPSERVICE_TENANTID_F5774A4803A3473D8A1599C0F656DDCE }}"
+              echo "SUB=${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9B4382379475413F93C0DBB9BD0969FC }}"
       
       - name: Azure Login
         uses: azure/login@v2
