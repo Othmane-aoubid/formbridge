@@ -83,7 +83,9 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_E02800B5F893472DAEA6DA6AA3495445 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F5774A4803A3473D8A1599C0F656DDCE }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9B4382379475413F93C0DBB9BD0969FC }}
 
       - name: Build and push Docker image
         run: |
@@ -104,12 +106,12 @@ jobs:
             --template-file ./infra/main.bicep \
             --parameters ./infra/parameters.json
 
-      - name: Deploy frontend to Static Web Apps
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: "upload"
-          app_location: "/frontend"
-          api_location: ""
-          output_location: ".next"
+     # - name: Deploy frontend to Static Web Apps
+       # uses: Azure/static-web-apps-deploy@v1
+       # with:
+         # azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+         # repo_token: ${{ secrets.GITHUB_TOKEN }}
+         # action: "upload"
+         # app_location: "/frontend"
+         # api_location: ""
+         # output_location: ".next"
