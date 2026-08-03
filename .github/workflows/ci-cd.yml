@@ -85,7 +85,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_E02800B5F893472DAEA6DA6AA3495445 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F5774A4803A3473D8A1599C0F656DDCE }}
