@@ -9,25 +9,13 @@ param webAppName string
 param staticWebAppName string
 
 // Storage Account
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageAccountName
-  location: location
-  sku: {
-    name: 'Standard_LRS'
-  }
-  kind: 'StorageV2'
-  properties: {
-    accessTier: 'Hot'
-    supportsHttpsTrafficOnly: true
-  }
 }
 
 // Storage Containers
 resource incomingContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   name: '${storageAccountName}/default/incoming'
-  dependsOn: [
-    storageAccount
-  ]
   properties: {
     publicAccess: 'None'
   }
@@ -35,9 +23,6 @@ resource incomingContainer 'Microsoft.Storage/storageAccounts/blobServices/conta
 
 resource processedContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   name: '${storageAccountName}/default/processed'
-  dependsOn: [
-    storageAccount
-  ]
   properties: {
     publicAccess: 'None'
   }
@@ -45,9 +30,6 @@ resource processedContainer 'Microsoft.Storage/storageAccounts/blobServices/cont
 
 resource archiveContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   name: '${storageAccountName}/default/archive'
-  dependsOn: [
-    storageAccount
-  ]
   properties: {
     publicAccess: 'None'
   }
