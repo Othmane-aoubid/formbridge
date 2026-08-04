@@ -119,7 +119,7 @@ async def get_download_sas(document_id: str) -> Dict[str, str]:
     return {"download_sas_url": sas_url}
 
 
-@router.get("/")
+@router.get("")
 async def search_documents(
     query: Optional[str] = None,
     document_type: Optional[str] = None,
