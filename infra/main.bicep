@@ -112,7 +112,7 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-17-preview
   name: serviceBusNamespaceName
   location: location
   sku: {
-    name: 'Standard'
+    name: 'standard'
   }
 }
 
