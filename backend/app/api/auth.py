@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -8,6 +9,8 @@ from pydantic import BaseModel, EmailStr
 from app.core.config import settings
 from app.services.user_service import user_service
 from app.models.user import UserCreate, UserResponse as UserResponseModel
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -48,6 +51,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 @router.post("/register", response_model=UserResponse)
 async def register(user: UserRegister):
     try:
+        logger.info(f"[AUTH_DEBUG] Register request received - email: {user.email}")
+        logger.info(f"[AUTH_DEBUG] Password character length: {len(user.password)}")
+        logger.info(f"[AUTH_DEBUG] Password UTF-8 byte length: {len(user.password.encode('utf-8'))}")
+        
         user_data = UserCreate(
             email=user.email,
             password=user.password,
@@ -55,6 +62,7 @@ async def register(user: UserRegister):
             last_name=user.last_name
         )
         created_user = await user_service.create_user(user_data)
+        logger.info(f"[AUTH_DEBUG] User created successfully - email: {user.email}")
         return UserResponse(
             id=created_user.id,
             email=created_user.email,
@@ -64,9 +72,10 @@ async def register(user: UserRegister):
             updated_at=created_user.updated_at
         )
     except ValueError as e:
+        logger.info(f"[AUTH_DEBUG] Registration ValueError - email: {user.email}, error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        print(f"Registration error: {e}")
+        logger.error(f"[AUTH_DEBUG] Registration exception - email: {user.email}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
@@ -74,13 +83,19 @@ async def register(user: UserRegister):
 
 @router.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    logger.info(f"[AUTH_DEBUG] Login request received - username: {form_data.username}")
+    logger.info(f"[AUTH_DEBUG] Password character length: {len(form_data.password)}")
+    logger.info(f"[AUTH_DEBUG] Password UTF-8 byte length: {len(form_data.password.encode('utf-8'))}")
+    
     user = await user_service.authenticate_user(form_data.username, form_data.password)
     if not user:
+        logger.info(f"[AUTH_DEBUG] Authentication failed - username: {form_data.username}")
         raise HTTPException(
             status_code=401,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    logger.info(f"[AUTH_DEBUG] Authentication successful - username: {form_data.username}")
     access_token = create_access_token(data={"sub": user.email})
     return Token(access_token=access_token, token_type="bearer")
 
