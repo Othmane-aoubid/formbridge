@@ -51,10 +51,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 @router.post("/register", response_model=UserResponse)
 async def register(user: UserRegister):
     try:
-        logger.info(f"[AUTH_DEBUG] Register request received - email: {user.email}")
-        logger.info(f"[AUTH_DEBUG] Password character length: {len(user.password)}")
-        logger.info(f"[AUTH_DEBUG] Password UTF-8 byte length: {len(user.password.encode('utf-8'))}")
-        
         user_data = UserCreate(
             email=user.email,
             password=user.password,
@@ -62,7 +58,7 @@ async def register(user: UserRegister):
             last_name=user.last_name
         )
         created_user = await user_service.create_user(user_data)
-        logger.info(f"[AUTH_DEBUG] User created successfully - email: {user.email}")
+        logger.info(f"User registered successfully: {user.email}")
         return UserResponse(
             id=created_user.id,
             email=created_user.email,
@@ -72,30 +68,24 @@ async def register(user: UserRegister):
             updated_at=created_user.updated_at
         )
     except ValueError as e:
-        logger.info(f"[AUTH_DEBUG] Registration ValueError - email: {user.email}, error: {str(e)}")
+        logger.warning(f"Registration failed for {user.email}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"[AUTH_DEBUG] Registration exception - email: {user.email}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+        logger.error(f"Unexpected error during registration for {user.email}: {type(e).__name__}")
+        raise HTTPException(status_code=500, detail="Registration failed")
 
 
 @router.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    logger.info(f"[AUTH_DEBUG] Login request received - username: {form_data.username}")
-    logger.info(f"[AUTH_DEBUG] Password character length: {len(form_data.password)}")
-    logger.info(f"[AUTH_DEBUG] Password UTF-8 byte length: {len(form_data.password.encode('utf-8'))}")
-    
     user = await user_service.authenticate_user(form_data.username, form_data.password)
     if not user:
-        logger.info(f"[AUTH_DEBUG] Authentication failed - username: {form_data.username}")
+        logger.warning(f"Authentication failed for {form_data.username}")
         raise HTTPException(
             status_code=401,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    logger.info(f"[AUTH_DEBUG] Authentication successful - username: {form_data.username}")
+    logger.info(f"Authentication successful for {form_data.username}")
     access_token = create_access_token(data={"sub": user.email})
     return Token(access_token=access_token, token_type="bearer")
 
@@ -106,12 +96,15 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
         email: str = payload.get("sub")
         if email is None:
+            logger.warning("Invalid token: missing subject")
             raise HTTPException(status_code=401, detail="Invalid credentials")
-    except JWTError:
+    except JWTError as e:
+        logger.warning(f"Token validation failed: {type(e).__name__}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     user = await user_service.get_user_by_email(email)
     if not user:
+        logger.warning(f"User not found: {email}")
         raise HTTPException(status_code=404, detail="User not found")
     
     return UserResponse(
