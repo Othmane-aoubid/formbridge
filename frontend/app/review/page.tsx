@@ -66,40 +66,40 @@ export default function ReviewQueuePage() {
     <AppLayout>
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+          <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 radius-md relative">
             <span className="block sm:inline">{error}</span>
             <button
               onClick={() => setError('')}
-              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+              className="absolute top-0 bottom-0 right-0 px-4 py-3 text-red-400 hover:text-red-300 transition-colors"
             >
-              <span className="text-red-500">&times;</span>
+              <span>&times;</span>
             </button>
           </div>
         )}
         {success && (
-          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative">
+          <div className="mb-4 bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 radius-md relative">
             <span className="block sm:inline">{success}</span>
             <button
               onClick={() => setSuccess('')}
-              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+              className="absolute top-0 bottom-0 right-0 px-4 py-3 text-green-400 hover:text-green-300 transition-colors"
             >
-              <span className="text-green-500">&times;</span>
+              <span>&times;</span>
             </button>
           </div>
         )}
-        <div className="bg-white shadow rounded-lg">
+        <div className="bg-card radius-card border border-card shadow-card">
           <div className="px-4 py-5 sm:p-6">
 
             <div className="mb-6 flex space-x-4">
               <div>
-                <label htmlFor="docType" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="docType" className="block text-sm font-medium text-primary">
                   Document Type
                 </label>
                 <select
                   id="docType"
                   value={documentType}
                   onChange={(e) => setDocumentType(e.target.value)}
-                  className="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                  className="mt-1 block bg-card-secondary border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
                 >
                   <option value="">All Types</option>
                   <option value="invoice">Invoice</option>
@@ -110,14 +110,14 @@ export default function ReviewQueuePage() {
               </div>
 
               <div>
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="status" className="block text-sm font-medium text-primary">
                   Status
                 </label>
                 <select
                   id="status"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                  className="mt-1 block bg-card-secondary border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
                 >
                   <option value="">All Statuses</option>
                   <option value="needs_review">Needs Review</option>
@@ -128,7 +128,7 @@ export default function ReviewQueuePage() {
               </div>
 
               <div>
-                <label htmlFor="createdDate" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="createdDate" className="block text-sm font-medium text-primary">
                   Created Date
                 </label>
                 <input
@@ -136,66 +136,66 @@ export default function ReviewQueuePage() {
                   type="date"
                   value={createdDate}
                   onChange={(e) => setCreatedDate(e.target.value)}
-                  className="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                  className="mt-1 block bg-card-secondary border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
                 />
               </div>
             </div>
 
             {loading ? (
               <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-accent-blue"></div>
               </div>
             ) : queue.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
+              <div className="text-center py-12 text-secondary">
                 No documents pending review
               </div>
             ) : (
               <div className="overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-card">
+                  <thead className="bg-card-secondary">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Filename
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Type
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Created
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-card divide-y divide-card">
                     {queue.map((item) => (
                       <tr key={item.documentId}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
                           {item.filename}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
                           {item.documentType}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
                           {item.status}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
                           {new Date(item.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                           <Link
                             href={`/review/${item.documentId}`}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-accent-blue hover:text-blue-400 transition-colors"
                           >
                             Review
                           </Link>
                           <button
                             onClick={() => handleDelete(item.documentId)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-400 hover:text-red-300 transition-colors"
                           >
                             Delete
                           </button>

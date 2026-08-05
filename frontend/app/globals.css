@@ -1,1 +1,118 @@
 @import "tailwindcss";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #0B1018;
+    color: #F8FAFC;
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #F8FAFC;
+  }
+
+  p {
+    margin: 0;
+    color: #94A3B8;
+  }
+
+  a {
+    color: #F8FAFC;
+    text-decoration: none;
+  }
+
+  button {
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-primary {
+    color: #F8FAFC;
+  }
+
+  .text-secondary {
+    color: #94A3B8;
+  }
+
+  .text-muted {
+    color: #64748B;
+  }
+
+  .bg-main {
+    background-color: #0B1018;
+  }
+
+  .bg-alt {
+    background-color: #111827;
+  }
+
+  .bg-card {
+    background-color: #151D2B;
+  }
+
+  .bg-card-secondary {
+    background-color: #182233;
+  }
+
+  .border-card {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .shadow-soft {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  .shadow-card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  .accent-blue {
+    color: #2563EB;
+  }
+
+  .bg-accent-blue {
+    background-color: #2563EB;
+  }
+
+  .bg-accent-blue-hover:hover {
+    background-color: #3B82F6;
+  }
+
+  .bg-primary-cta {
+    background-color: #22C55E;
+  }
+
+  .bg-primary-cta-hover:hover {
+    background-color: #16A34A;
+  }
+
+  .radius-card {
+    border-radius: 16px;
+  }
+
+  .radius-lg {
+    border-radius: 12px;
+  }
+
+  .radius-md {
+    border-radius: 8px;
+  }
+}

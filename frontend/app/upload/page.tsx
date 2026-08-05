@@ -41,22 +41,22 @@ export default function UploadPage() {
     <AppLayout>
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white shadow rounded-lg">
+          <div className="bg-card radius-card border border-card shadow-soft">
             <div className="px-4 py-5 sm:p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              <h2 className="text-2xl font-bold text-primary mb-6">
                 Upload Document
               </h2>
 
               <form onSubmit={handleUpload} className="space-y-6">
                 <div>
-                  <label htmlFor="documentType" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="documentType" className="block text-sm font-medium text-primary">
                     Document Type
                   </label>
                   <select
                     id="documentType"
                     value={documentType}
                     onChange={(e) => setDocumentType(e.target.value as any)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                    className="mt-1 block w-full bg-card-secondary border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
                   >
                     <option value="invoice">Invoice</option>
                     <option value="receipt">Receipt</option>
@@ -66,7 +66,7 @@ export default function UploadPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="file" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="file" className="block text-sm font-medium text-primary">
                     File
                   </label>
                   <input
@@ -74,29 +74,29 @@ export default function UploadPage() {
                     type="file"
                     onChange={(e) => setFile(e.target.files?.[0] || null)}
                     accept=".pdf,.jpg,.jpeg,.png"
-                    className="mt-1 block w-full text-sm text-gray-500
+                    className="mt-1 block w-full text-sm text-muted
                       file:mr-4 file:py-2 file:px-4
                       file:rounded-md file:border-0
                       file:text-sm file:font-semibold
-                      file:bg-blue-50 file:text-blue-700
-                      hover:file:bg-blue-100"
+                      file:bg-accent-blue/20 file:text-accent-blue
+                      hover:file:bg-accent-blue/30"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={!file || uploading}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium text-white bg-primary-cta radius-lg bg-primary-cta-hover shadow-card hover:shadow-soft transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploading ? 'Uploading...' : 'Upload'}
                 </button>
 
                 {message && (
                   <div
-                    className={`p-4 rounded-md ${
+                    className={`p-4 radius-md ${
                       message.includes('failed')
-                        ? 'bg-red-50 text-red-700'
-                        : 'bg-green-50 text-green-700'
+                        ? 'bg-red-500/10 border border-red-500/30 text-red-400'
+                        : 'bg-green-500/10 border border-green-500/30 text-green-400'
                     }`}
                   >
                     {message}

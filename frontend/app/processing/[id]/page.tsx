@@ -64,7 +64,7 @@ export default function DocumentProcessingPage() {
     return (
       <AppLayout>
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-blue"></div>
         </div>
       </AppLayout>
     );
@@ -74,7 +74,7 @@ export default function DocumentProcessingPage() {
     return (
       <AppLayout>
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-500">Document not found</div>
+          <div className="text-secondary">Document not found</div>
         </div>
       </AppLayout>
     );
@@ -87,62 +87,62 @@ export default function DocumentProcessingPage() {
           <div className="mb-6">
             <button
               onClick={() => router.push('/processing')}
-              className="text-blue-600 hover:text-blue-800 mb-4 inline-flex items-center"
+              className="text-accent-blue hover:text-blue-400 mb-4 inline-flex items-center transition-colors"
             >
               ← Back to Processing
             </button>
           </div>
 
-          <div className="bg-white shadow rounded-lg">
+          <div className="bg-card radius-card border border-card shadow-card">
             <div className="px-4 py-5 sm:p-6">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">{document.filename}</h2>
-                <p className="text-gray-600">Document Type: {document.documentType}</p>
-                <p className="text-gray-600">Status: {document.status}</p>
+                <h2 className="text-2xl font-bold text-primary mb-2">{document.filename}</h2>
+                <p className="text-secondary">Document Type: {document.documentType}</p>
+                <p className="text-secondary">Status: {document.status}</p>
               </div>
 
-              <div className="border-t border-gray-200 pt-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Processing Status</h3>
+              <div className="border-t border-card pt-6">
+                <h3 className="text-lg font-medium text-primary mb-4">Processing Status</h3>
 
                 {document.status === 'processing' ? (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8">
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-8">
                     <div className="flex flex-col items-center justify-center">
                       <div className="w-full max-w-md mb-4">
                         <div className="flex justify-between mb-2">
-                          <span className="text-sm font-medium text-yellow-800">
+                          <span className="text-sm font-medium text-yellow-400">
                             {(document as any).processingStep || 'Processing...'}
                           </span>
-                          <span className="text-sm font-medium text-yellow-800">
+                          <span className="text-sm font-medium text-yellow-400">
                             {(document as any).processingProgress || 0}%
                           </span>
                         </div>
-                        <div className="w-full bg-yellow-200 rounded-full h-4">
+                        <div className="w-full bg-yellow-500/30 rounded-full h-4">
                           <div
-                            className="bg-yellow-600 h-4 rounded-full transition-all duration-300"
+                            className="bg-yellow-400 h-4 rounded-full transition-all duration-300"
                             style={{ width: `${(document as any).processingProgress || 0}%` }}
                           ></div>
                         </div>
                       </div>
-                      <p className="text-yellow-800 text-lg font-medium">Document is currently being processed...</p>
+                      <p className="text-yellow-400 text-lg font-medium">Document is currently being processed...</p>
                     </div>
                   </div>
                 ) : document.status === 'completed' ? (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <p className="text-green-800">Document processing completed successfully</p>
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                    <p className="text-green-400">Document processing completed successfully</p>
                     <Link
                       href={`/review/${documentId}`}
-                      className="mt-3 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200"
+                      className="mt-3 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-green-400 bg-green-500/20 hover:bg-green-500/30 transition-colors"
                     >
                       Review Document →
                     </Link>
                   </div>
                 ) : document.status === 'failed' ? (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p className="text-red-800">Document processing failed</p>
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                    <p className="text-red-400">Document processing failed</p>
                   </div>
                 ) : (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <p className="text-gray-800">Document is ready for processing</p>
+                  <div className="bg-card-secondary border border-card rounded-lg p-4">
+                    <p className="text-secondary">Document is ready for processing</p>
                   </div>
                 )}
               </div>
@@ -151,7 +151,7 @@ export default function DocumentProcessingPage() {
                 <button
                   onClick={handleReprocess}
                   disabled={processing || document.status === 'processing'}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-accent-blue hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {processing ? 'Processing...' : 'Reprocess Document'}
                 </button>
@@ -159,9 +159,9 @@ export default function DocumentProcessingPage() {
 
               {/* Document Preview */}
               {document.status !== 'processing' && (
-                <div className="mt-6 border-t border-gray-200 pt-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Document Preview</h3>
-                  <div className="border rounded-lg p-4 bg-gray-50">
+                <div className="mt-6 border-t border-card pt-6">
+                  <h3 className="text-lg font-medium text-primary mb-4">Document Preview</h3>
+                  <div className="border border-card rounded-lg p-4 bg-card-secondary">
                     {(document as any).previewUrl ? (
                       <iframe
                         src={(document as any).previewUrl}
@@ -169,7 +169,7 @@ export default function DocumentProcessingPage() {
                         title="Document Preview"
                       />
                     ) : (
-                      <div className="flex items-center justify-center h-96 text-gray-500">
+                      <div className="flex items-center justify-center h-96 text-secondary">
                         Preview not available
                       </div>
                     )}
@@ -179,10 +179,10 @@ export default function DocumentProcessingPage() {
 
               {/* OCR Text */}
               {document.status !== 'processing' && (document as any).ocrText && (
-                <div className="mt-6 border-t border-gray-200 pt-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">OCR Text</h3>
-                  <div className="border rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
-                    <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                <div className="mt-6 border-t border-card pt-6">
+                  <h3 className="text-lg font-medium text-primary mb-4">OCR Text</h3>
+                  <div className="border border-card rounded-lg p-4 bg-card-secondary max-h-96 overflow-y-auto">
+                    <pre className="text-sm text-secondary whitespace-pre-wrap">
                       {(document as any).ocrText}
                     </pre>
                   </div>
@@ -191,13 +191,13 @@ export default function DocumentProcessingPage() {
 
               {/* Extracted Fields */}
               {document.status !== 'processing' && (document as any).extractedFields && Object.keys((document as any).extractedFields).length > 0 && (
-                <div className="mt-6 border-t border-gray-200 pt-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Extracted Fields</h3>
-                  <div className="border rounded-lg p-4 bg-gray-50">
+                <div className="mt-6 border-t border-card pt-6">
+                  <h3 className="text-lg font-medium text-primary mb-4">Extracted Fields</h3>
+                  <div className="border border-card rounded-lg p-4 bg-card-secondary">
                     {Object.entries((document as any).extractedFields).map(([key, value]) => (
                       <div key={key} className="mb-2">
-                        <span className="font-medium text-gray-700">{key}:</span>
-                        <span className="ml-2 text-gray-600">{Array.isArray(value) ? JSON.stringify(value) : String(value)}</span>
+                        <span className="font-medium text-primary">{key}:</span>
+                        <span className="ml-2 text-secondary">{Array.isArray(value) ? JSON.stringify(value) : String(value)}</span>
                       </div>
                     ))}
                   </div>
