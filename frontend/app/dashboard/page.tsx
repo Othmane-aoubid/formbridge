@@ -38,30 +38,27 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="px-4 sm:px-6 lg:px-8 py-8">
+      <div className="px-6 md:px-16 lg:px-24 py-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Welcome back, {user?.first_name || 'User'}!</h2>
-          <p className="mt-2 text-gray-600">Here's what's happening with your documents.</p>
+          <h2 className="text-primary text-2xl md:text-3xl font-bold">Welcome back, {user?.first_name || 'User'}!</h2>
+          <p className="mt-2 text-secondary">Here's what's happening with your documents.</p>
         </div>
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">Loading dashboard...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-accent-blue"></div>
+            <p className="mt-4 text-secondary">Loading dashboard...</p>
           </div>
         ) : (
           <>
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {stats.map((stat) => (
-                <div key={stat.label} className="bg-white rounded-lg shadow p-6">
+                <div key={stat.label} className="bg-card radius-card border border-card p-6 shadow-card hover:shadow-soft transition-all duration-300 hover:-translate-y-1">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                      <p className="text-2xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                    </div>
-                    <div className={`text-sm font-medium text-${stat.color}-600`}>
-                      {stat.change}
+                      <p className="text-muted text-sm font-medium">{stat.label}</p>
+                      <p className="text-primary text-2xl font-bold mt-2">{stat.value}</p>
                     </div>
                   </div>
                 </div>
@@ -69,59 +66,59 @@ export default function DashboardPage() {
             </div>
 
             {/* Recent Documents */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Recent Documents</h2>
-                <Link href="/documents" className="text-sm text-blue-600 hover:text-blue-700">
+            <div className="bg-card radius-card border border-card shadow-card">
+              <div className="px-6 py-4 border-b border-card flex items-center justify-between">
+                <h2 className="text-primary text-lg font-semibold">Recent Documents</h2>
+                <Link href="/documents" className="text-sm text-secondary hover:text-primary transition-colors">
                   View all
                 </Link>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-card">
+                  <thead className="bg-card-secondary">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-muted text-xs font-medium uppercase tracking-wider">
                         Document
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-muted text-xs font-medium uppercase tracking-wider">
                         Type
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-muted text-xs font-medium uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-muted text-xs font-medium uppercase tracking-wider">
                         Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-muted text-xs font-medium uppercase tracking-wider">
                         Action
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-card divide-y divide-card">
                     {documents.map((doc: any) => (
                       <tr key={doc.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{doc.filename}</div>
+                          <div className="text-primary text-sm font-medium">{doc.filename}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold bg-accent-blue/20 text-blue-400 radius-md">
                             {doc.documentType}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            doc.status === 'processed' ? 'bg-green-100 text-green-800' :
-                            doc.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-blue-100 text-blue-800'
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold radius-md ${
+                            doc.status === 'processed' ? 'bg-green-500/20 text-green-400' :
+                            doc.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-blue-500/20 text-blue-400'
                           }`}>
                             {doc.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-secondary text-sm">
                           {new Date(doc.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <Link href={`/review/${doc.id}`} className="text-blue-600 hover:text-blue-900">
+                          <Link href={`/review/${doc.id}`} className="text-accent-blue hover:text-blue-400 transition-colors">
                             Review
                           </Link>
                         </td>
@@ -129,7 +126,7 @@ export default function DashboardPage() {
                     ))}
                     {documents.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                        <td colSpan={5} className="px-6 py-4 text-center text-secondary">
                           No documents yet. Upload your first document to get started!
                         </td>
                       </tr>
@@ -140,28 +137,28 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="mt-8 bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
+            <div className="mt-8 bg-card radius-card border border-card shadow-card">
+              <div className="px-6 py-4 border-b border-card">
+                <h2 className="text-primary text-lg font-semibold">Quick Actions</h2>
               </div>
               <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Link
                   href="/upload"
-                  className="flex items-center justify-center px-4 py-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                  className="flex items-center justify-center px-4 py-6 border border-card text-sm font-medium bg-primary-cta text-white radius-lg bg-primary-cta-hover transition-all duration-200 hover:shadow-card"
                 >
                   <span className="text-2xl mr-2">📤</span>
                   Upload Document
                 </Link>
                 <Link
                   href="/review"
-                  className="flex items-center justify-center px-4 py-6 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  className="flex items-center justify-center px-4 py-6 border border-card text-sm font-medium text-secondary hover:border-accent-blue hover:text-primary radius-lg transition-all duration-200 hover:shadow-card"
                 >
                   <span className="text-2xl mr-2">✅</span>
                   Review Queue
                 </Link>
                 <Link
                   href="/search"
-                  className="flex items-center justify-center px-4 py-6 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  className="flex items-center justify-center px-4 py-6 border border-card text-sm font-medium text-secondary hover:border-accent-blue hover:text-primary radius-lg transition-all duration-200 hover:shadow-card"
                 >
                   <span className="text-2xl mr-2">🔍</span>
                   Search Documents

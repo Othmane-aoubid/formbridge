@@ -69,7 +69,7 @@ export default function ReviewDetailPage() {
     return (
       <AppLayout>
         <div className="flex items-center justify-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue"></div>
         </div>
       </AppLayout>
     );
@@ -79,7 +79,7 @@ export default function ReviewDetailPage() {
     return (
       <AppLayout>
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-500">Document not found</div>
+          <div className="text-secondary">Document not found</div>
         </div>
       </AppLayout>
     );
@@ -90,35 +90,35 @@ export default function ReviewDetailPage() {
       <div className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+            <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 radius-md relative">
               <span className="block sm:inline">{error}</span>
               <button
                 onClick={() => setError('')}
-                className="absolute top-0 bottom-0 right-0 px-4 py-3"
+                className="absolute top-0 bottom-0 right-0 px-4 py-3 text-red-400 hover:text-red-300 transition-colors"
               >
-                <span className="text-red-500">&times;</span>
+                <span>&times;</span>
               </button>
             </div>
           )}
           {success && (
-            <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative">
+            <div className="mb-4 bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 radius-md relative">
               <span className="block sm:inline">{success}</span>
               <button
                 onClick={() => setSuccess('')}
-                className="absolute top-0 bottom-0 right-0 px-4 py-3"
+                className="absolute top-0 bottom-0 right-0 px-4 py-3 text-green-400 hover:text-green-300 transition-colors"
               >
-                <span className="text-green-500">&times;</span>
+                <span>&times;</span>
               </button>
             </div>
           )}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Document Preview */}
-            <div className="bg-white shadow rounded-lg">
+            <div className="bg-card radius-card border border-card shadow-card">
               <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">
+                <h2 className="text-lg font-medium text-primary mb-4">
                   Document Preview
                 </h2>
-                <div className="border rounded-lg p-4 bg-gray-50">
+                <div className="border border-card rounded-lg p-4 bg-card-secondary">
                   {document.previewUrl ? (
                     <iframe
                       src={document.previewUrl}
@@ -126,7 +126,7 @@ export default function ReviewDetailPage() {
                       title="Document Preview"
                     />
                   ) : (
-                    <div className="flex items-center justify-center h-96 text-gray-500">
+                    <div className="flex items-center justify-center h-96 text-secondary">
                       Preview not available
                     </div>
                   )}
@@ -135,13 +135,13 @@ export default function ReviewDetailPage() {
             </div>
 
             {/* OCR Text */}
-            <div className="bg-white shadow rounded-lg">
+            <div className="bg-card radius-card border border-card shadow-card">
               <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">
+                <h2 className="text-lg font-medium text-primary mb-4">
                   OCR Text
                 </h2>
-                <div className="border rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
-                  <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                <div className="border border-card rounded-lg p-4 bg-card-secondary max-h-96 overflow-y-auto">
+                  <pre className="text-sm text-secondary whitespace-pre-wrap">
                     {(document as any).ocrText || 'No OCR text available'}
                   </pre>
                 </div>
@@ -149,9 +149,9 @@ export default function ReviewDetailPage() {
             </div>
 
             {/* Review Form */}
-            <div className="bg-white shadow rounded-lg">
+            <div className="bg-card radius-card border border-card shadow-card">
               <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">
+                <h2 className="text-lg font-medium text-primary mb-4">
                   Review Extracted Fields
                 </h2>
 
@@ -165,17 +165,17 @@ export default function ReviewDetailPage() {
 
                     return (
                       <div key={fieldName}>
-                        <label htmlFor={fieldName} className="block text-sm font-medium text-gray-700">
+                        <label htmlFor={fieldName} className="block text-sm font-medium text-primary">
                           {fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace(/([A-Z])/g, ' $1')}
                           {confidenceScore && (
-                            <span className="ml-2 text-xs text-gray-500">
+                            <span className="ml-2 text-xs text-muted">
                               ({(confidenceScore * 100).toFixed(0)}% confidence)
                             </span>
                           )}
                         </label>
                         {isArray ? (
-                          <div className="mt-1 p-3 bg-gray-50 border border-gray-300 rounded-md">
-                            <p className="text-sm text-gray-600">Array field - {JSON.stringify(fieldValue)}</p>
+                          <div className="mt-1 p-3 bg-card-secondary border border-card radius-md">
+                            <p className="text-sm text-secondary">Array field - {JSON.stringify(fieldValue)}</p>
                           </div>
                         ) : isDateField ? (
                           <input
@@ -183,7 +183,7 @@ export default function ReviewDetailPage() {
                             type="date"
                             value={typeof fieldValue === 'string' ? fieldValue : ''}
                             onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                            className="mt-1 block w-full bg-card-secondary border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
                           />
                         ) : isNumberField ? (
                           <input
@@ -192,7 +192,7 @@ export default function ReviewDetailPage() {
                             step="0.01"
                             value={typeof fieldValue === 'number' ? fieldValue : ''}
                             onChange={(e) => handleFieldChange(fieldName, parseFloat(e.target.value))}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                            className="mt-1 block w-full bg-card-secondary border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
                           />
                         ) : (
                           <input
@@ -200,7 +200,7 @@ export default function ReviewDetailPage() {
                             type="text"
                             value={typeof fieldValue === 'string' ? fieldValue : ''}
                             onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                            className="mt-1 block w-full bg-card-secondary border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
                           />
                         )}
                       </div>
@@ -208,7 +208,7 @@ export default function ReviewDetailPage() {
                   })}
 
                   <div>
-                    <label htmlFor="comments" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="comments" className="block text-sm font-medium text-primary">
                       Comments
                     </label>
                     <textarea
@@ -216,7 +216,7 @@ export default function ReviewDetailPage() {
                       rows={3}
                       value={comments}
                       onChange={(e) => setComments(e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                      className="mt-1 block w-full bg-card-secondary border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
                       placeholder="Add any notes about this review..."
                     />
                   </div>
@@ -225,7 +225,7 @@ export default function ReviewDetailPage() {
                     <button
                       type="submit"
                       disabled={saving}
-                      className="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 flex justify-center py-2 px-4 border border-transparent text-sm font-medium text-white bg-primary-cta radius-lg bg-primary-cta-hover shadow-card hover:shadow-soft transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {saving ? 'Submitting...' : 'Submit Review'}
                     </button>
@@ -243,14 +243,14 @@ export default function ReviewDetailPage() {
                         }
                       }}
                       disabled={retrying}
-                      className="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 flex justify-center py-2 px-4 border border-card text-sm font-medium text-secondary bg-card-secondary hover:text-primary transition-colors radius-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {retrying ? 'Retrying...' : 'Retry'}
                     </button>
                     <button
                       type="button"
                       onClick={() => router.push('/review')}
-                      className="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      className="flex-1 flex justify-center py-2 px-4 border border-card text-sm font-medium text-secondary bg-card-secondary hover:text-primary transition-colors radius-lg"
                     >
                       Cancel
                     </button>
