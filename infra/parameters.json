@@ -15,13 +15,13 @@
       "value": "formbridge-cosmos"
     },
     "serviceBusNamespaceName": {
-      "value": "formbridge-sb"
+      "value": "formbridgenamespace"
     },
     "appServicePlanName": {
       "value": "formbridge-asp"
     },
     "webAppName": {
-      "value": "formbridge-api"
+      "value": "formbridge-backend"
     },
     "staticWebAppName": {
       "value": "formbridge-web"
