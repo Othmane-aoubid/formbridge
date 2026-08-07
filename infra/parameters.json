@@ -6,19 +6,19 @@
       "value": "formbridgestorage"
     },
     "documentIntelligenceName": {
-      "value": "formbridge-di"
+      "value": "formbridgedci"
     },
     "searchServiceName": {
-      "value": "formbridge-search"
+      "value": "formbridgess"
     },
     "cosmosDbAccountName": {
-      "value": "formbridge-cosmos"
+      "value": "formbridgedb"
     },
     "serviceBusNamespaceName": {
-      "value": "formbridge-sb"
+      "value": "formbridgenamespace"
     },
     "appServicePlanName": {
-      "value": "formbridge-asp"
+      "value": "formbridge-plan"
     },
     "webAppName": {
       "value": "formbridge-backend"
