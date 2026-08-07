@@ -171,9 +171,12 @@ export default function ProcessingPage() {
               <div className="divide-y divide-card">
                 {processingDocs.map((doc) => (
                   <div key={doc.id} className="px-6 py-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-primary">{doc.filename}</p>
-                      <p className="text-xs text-secondary">Processing...</p>
+                    <div className="flex items-center space-x-3">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-accent-blue"></div>
+                      <div>
+                        <p className="text-sm font-medium text-primary">{doc.filename}</p>
+                        <p className="text-xs text-secondary">Processing...</p>
+                      </div>
                     </div>
                     <div className="flex items-center space-x-3">
                       <button

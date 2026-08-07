@@ -20,6 +20,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     { name: 'Documents', href: '/documents', icon: '📁' },
     { name: 'Review Queue', href: '/review', icon: '✅' },
     { name: 'Processing', href: '/processing', icon: '⚙️' },
+    { name: 'Export', href: '/export', icon: '📥' },
     { name: 'Search', href: '/search', icon: '🔍' },
     { name: 'Settings', href: '/settings', icon: '⚙️' },
   ];
