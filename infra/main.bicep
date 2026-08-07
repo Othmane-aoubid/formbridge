@@ -56,7 +56,7 @@ resource searchService 'Microsoft.Search/searchServices@2023-11-01' = {
   name: searchServiceName
   location: location
   sku: {
-    name: 'Standard'
+    name: 'standard'
   }
   properties: {
     replicaCount: 1
@@ -71,7 +71,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
   location: location
   kind: 'GlobalDocumentDB'
   properties: {
-    databaseAccountOfferType: 'Standard'
+    databaseAccountOfferType: 'standard'
     locations: [
       {
         locationName: location
