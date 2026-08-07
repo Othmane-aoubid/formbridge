@@ -148,12 +148,12 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
 resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   name: webAppName
   location: location
-  kind: 'app'
+  kind: 'app,linux'
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
     siteConfig: {
-      linuxFxVersion: 'DOCKER|youracr.azurecr.io/docproc-fastapi:latest'
+      linuxFxVersion: 'DOCKER|formbridgeacr-hadsfjbeduazatbz.azurecr.io/docproc-fastapi:latest'
       alwaysOn: true
       appCommandLine: 'uvicorn app.main:app --host 0.0.0.0 --port 8000'
     }
