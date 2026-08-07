@@ -129,7 +129,8 @@ resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2024-01-01' = {
   }
 }
 
-// App Service Plan
+/*
+ // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: appServicePlanName
   location: location
@@ -159,17 +160,24 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
     }
   }
 }
+*/
 
 // Key Vault
 resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
   name: 'fbkv${take(uniqueString(resourceGroup().id), 8)}'
   location: location
   properties: {
+    tenantId: subscription().tenantId
+
     sku: {
       family: 'A'
       name: 'standard'
     }
-    tenantId: subscription().tenantId
+
+    accessPolicies: []
+
+    enableRbacAuthorization: true
+
     enablePurgeProtection: true
     enableSoftDelete: true
   }
@@ -181,4 +189,4 @@ output documentIntelligenceEndpoint string = documentIntelligence.properties.end
 output searchEndpoint string = 'https://${searchServiceName}.search.windows.net'
 output cosmosDbEndpoint string = cosmosDbAccount.properties.documentEndpoint
 output serviceBusEndpoint string = serviceBusNamespace.properties.serviceBusEndpoint
-output webAppUrl string = 'https://${webAppName}.azurewebsites.net'
+/* output webAppUrl string = 'https://${webAppName}.azurewebsites.net' */
