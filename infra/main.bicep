@@ -1,4 +1,5 @@
 param location string = resourceGroup().location
+
 param storageAccountName string
 param documentIntelligenceName string
 param searchServiceName string
@@ -12,14 +13,17 @@ param staticWebAppName string
 // EXISTING RESOURCES
 // =========================
 
+// Storage Account is in another resource group
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageAccountName
   scope: resourceGroup('DefaultResourceGroup-PAR')
 }
-resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
+
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' existing = {
   parent: storageAccount
   name: 'default'
 }
+
 resource documentIntelligence 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = {
   name: documentIntelligenceName
 }
@@ -36,41 +40,27 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2024-01-01' existi
   name: serviceBusNamespaceName
 }
 
+
 // =========================
-// STORAGE
+// STORAGE CONTAINERS
 // =========================
 
-resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' existing = {
-  parent: storageAccount
-  name: 'default'
-}
-
-resource incomingContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+// These are deployed into the existing storage account
+resource incomingContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' existing = {
   parent: blobService
   name: 'incoming'
-
-  properties: {
-    publicAccess: 'None'
-  }
 }
 
-resource processedContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+resource processedContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' existing = {
   parent: blobService
   name: 'processed'
-
-  properties: {
-    publicAccess: 'None'
-  }
 }
 
-resource archiveContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+resource archiveContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' existing = {
   parent: blobService
   name: 'archive'
-
-  properties: {
-    publicAccess: 'None'
-  }
 }
+
 
 // =========================
 // COSMOS DB
@@ -86,6 +76,7 @@ resource cosmosDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2023
     }
   }
 }
+
 
 resource cosmosContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
   parent: cosmosDatabase
@@ -105,6 +96,7 @@ resource cosmosContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/con
   }
 }
 
+
 // =========================
 // SERVICE BUS
 // =========================
@@ -121,6 +113,7 @@ resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2024-01-01' = {
     deadLetteringOnMessageExpiration: false
   }
 }
+
 
 // =========================
 // KEY VAULT
@@ -146,12 +139,17 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
   }
 }
 
+
 // =========================
 // OUTPUTS
 // =========================
 
 output storageAccountId string = storageAccount.id
+
 output documentIntelligenceEndpoint string = documentIntelligence.properties.endpoint
+
 output searchEndpoint string = 'https://${searchServiceName}.search.windows.net'
+
 output cosmosDbEndpoint string = cosmosDbAccount.properties.documentEndpoint
+
 output serviceBusEndpoint string = serviceBusNamespace.properties.serviceBusEndpoint
