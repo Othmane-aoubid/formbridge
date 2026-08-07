@@ -21,7 +21,7 @@
       "value": "formbridge-asp"
     },
     "webAppName": {
-      "value": "formbridge-api"
+      "value": "formbridge-backend"
     },
     "staticWebAppName": {
       "value": "formbridge-web"
