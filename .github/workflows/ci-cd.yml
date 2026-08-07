@@ -31,7 +31,7 @@ jobs:
         run: |
           python -m venv venv
           source venv/bin/activate
-          pip install -r backend/requirements.txt
+          pip install -r requirements.txt
 
     #  - name: Run backend tests
     #    working-directory: ./backend
@@ -82,7 +82,7 @@ jobs:
         run: |
           python -m venv venv
           source venv/bin/activate
-          pip install -r backend/requirements.txt        
+          pip install -r   requirements.txt        
       
       - name: Azure Login
         uses: azure/login@v2
