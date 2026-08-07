@@ -93,7 +93,7 @@ jobs:
       - name: Build and push Docker image
         run: |
           az acr login --name ${{ secrets.ACR_NAME }}
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/docproc-fastapi:${{ github.sha }} ./backend
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/docproc-fastapi:${{ github.sha }} backend/Dockerfile .
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/docproc-fastapi:${{ github.sha }}
 
       - name: Deploy to Azure Web App
