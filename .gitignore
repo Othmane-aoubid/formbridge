@@ -48,4 +48,5 @@ htmlcov/
 # Misc
 *.pdf
 spec_text.txt
-extract_pdf.py
+extract_pdf.pybackend/venv/ 
+backend/venv/
