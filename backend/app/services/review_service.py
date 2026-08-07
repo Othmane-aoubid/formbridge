@@ -1,8 +1,8 @@
 from typing import Optional, List
 from app.services.document_service import DocumentService
 from app.services.storage_service import StorageService
-from app.models.review import ReviewQueueItem, ReviewResponse
-from app.models.document import DocumentStatus
+from app.models.review import ReviewQueueItem, ReviewResponse, ReviewQueueParams
+from app.models.document import DocumentStatus, DocumentSearchParams
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,23 +15,20 @@ class ReviewService:
     
     async def get_review_queue(
         self,
-        confidence_threshold: float = 0.8,
-        document_type: Optional[str] = None,
-        status: str = "needs_review",
-        skip: int = 0,
-        limit: int = 50
+        params: ReviewQueueParams
     ) -> List[ReviewQueueItem]:
         """
         Get documents pending review based on confidence threshold
         """
         try:
-            documents = await self.document_service.search_documents(
+            search_params = DocumentSearchParams(
                 query=None,
-                document_type=document_type,
-                status=status,
-                skip=skip,
-                limit=limit
+                document_type=params.document_type,
+                status=params.status,
+                skip=params.skip,
+                limit=params.limit
             )
+            documents = await self.document_service.search_documents(search_params)
             
             # Filter by confidence threshold
             queue_items = []
@@ -46,7 +43,7 @@ class ReviewService:
                 else:
                     avg_confidence = 0
                 
-                if avg_confidence < confidence_threshold:
+                if avg_confidence < params.confidence_threshold:
                     queue_items.append(ReviewQueueItem(
                         document_id=doc.id,
                         filename=doc.filename,

@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict, Any, Union
 from azure.cosmos import CosmosClient, PartitionKey
 from app.core.config import settings
-from app.models.document import DocumentResponse, DocumentStatus, DocumentType
+from app.models.document import DocumentResponse, DocumentStatus, DocumentType, DocumentCreateParams, DocumentSearchParams
 import logging
 import uuid
 from datetime import datetime
@@ -36,39 +36,31 @@ class DocumentService:
         except Exception as e:
             logger.warning(f"Cosmos DB initialization warning: {str(e)}")
     
-    async def create_document(
-        self,
-        document_id: str,
-        blob_uri: str,
-        filename: str,
-        content_type: str,
-        document_type: Union[DocumentType, str],
-        tenant_id: Optional[str] = None,
-        created_by: Optional[str] = None
-    ) -> DocumentResponse:
+    async def create_document(self, params: DocumentCreateParams) -> DocumentResponse:
         """
         Create a new document record
         """
         try:
             # Convert string to DocumentType if needed
+            document_type = params.document_type
             if isinstance(document_type, str):
                 document_type = DocumentType(document_type)
 
             document = {
-                "id": document_id,
-                "tenantId": tenant_id,
-                "blobUri": blob_uri,
-                "filename": filename,
-                "contentType": content_type,
+                "id": params.document_id,
+                "tenantId": params.tenant_id,
+                "blobUri": params.blob_uri,
+                "filename": params.filename,
+                "contentType": params.content_type,
                 "documentType": document_type.value,
                 "extractedFields": {},
                 "confidenceScores": {},
                 "status": DocumentStatus.ingested.value,
-                "createdBy": created_by,
+                "createdBy": params.created_by,
                 "createdAt": datetime.utcnow().isoformat(),
                 "audit": [
                     {
-                        "actor": created_by or "system",
+                        "actor": params.created_by or "system",
                         "action": "ingest",
                         "timestamp": datetime.utcnow().isoformat()
                     }
@@ -76,7 +68,7 @@ class DocumentService:
             }
             
             self.container.create_item(body=document)
-            logger.info(f"Created document record {document_id}")
+            logger.info(f"Created document record {params.document_id}")
             
             return DocumentResponse(**document)
             
@@ -90,6 +82,9 @@ class DocumentService:
         """
         try:
             item = self.container.read_item(item=document_id, partition_key=document_id)
+            # Ensure ocrText is included in the response
+            if 'ocrText' in item:
+                item['ocr_text'] = item['ocrText']
             return DocumentResponse(**item)
         except Exception as e:
             logger.error(f"Error getting document {document_id}: {str(e)}")
@@ -161,11 +156,7 @@ class DocumentService:
 
     async def search_documents(
         self,
-        query: Optional[str] = None,
-        document_type: Optional[str] = None,
-        status: Optional[str] = None,
-        skip: int = 0,
-        limit: int = 50
+        params: DocumentSearchParams
     ) -> List[DocumentResponse]:
         """
         Search documents with filters
@@ -174,28 +165,28 @@ class DocumentService:
             query_string = "SELECT * FROM c WHERE 1=1"
             parameters = []
 
-            if query:
+            if params.query:
                 query_string += " AND CONTAINS(c.filename, @query)"
-                parameters.append({"name": "@query", "value": query})
+                parameters.append({"name": "@query", "value": params.query})
 
-            if document_type:
+            if params.document_type:
                 query_string += " AND c.documentType = @documentType"
-                parameters.append({"name": "@documentType", "value": document_type})
+                parameters.append({"name": "@documentType", "value": params.document_type})
 
-            if status:
+            if params.status:
                 query_string += " AND c.status = @status"
-                parameters.append({"name": "@status", "value": status})
+                parameters.append({"name": "@status", "value": params.status})
 
-            query_string += f" ORDER BY c.createdAt DESC OFFSET {skip} LIMIT {limit}"
+            query_string += f" ORDER BY c.createdAt DESC OFFSET {params.skip} LIMIT {params.limit}"
 
             items = list(self.container.query_items(
                 query=query_string,
                 parameters=parameters,
                 enable_cross_partition_query=True
             ))
-            
+
             return [DocumentResponse(**item) for item in items]
-            
+
         except Exception as e:
             logger.error(f"Error searching documents: {str(e)}")
             return []
