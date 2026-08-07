@@ -41,11 +41,11 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 480
     
     # CORS
-    cors_origins: list = ["http://localhost:3000", "http://localhost:8000"]
+    cors_origins: list = ["http://localhost:3000", "http://localhost:8000", "https://formbridge-mauve.vercel.app"]
     
     # NVIDIA NIM API (optional fallback)
     nvidia_nim_api_key: Optional[str] = None
-    nvidia_nim_model: str = "deepseek-ai/deepseek-v4-pro"
+    nvidia_nim_model: str = "minimaxai/minimax-m3"
     
     class Config:
         env_file = ".env"
