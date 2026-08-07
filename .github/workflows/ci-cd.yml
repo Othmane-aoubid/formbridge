@@ -2,27 +2,30 @@ name: CI-CD
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 env:
   AZURE_WEBAPP_NAME: formbridge-backend
-  AZURE_WEBAPP_PACKAGE_PATH: './backend'
-  PYTHON_VERSION: '3.12'
+  AZURE_WEBAPP_PACKAGE_PATH: "./backend"
+  PYTHON_VERSION: "3.12"
 
 permissions:
   id-token: write
-  contents: read  
+  contents: read
 
 jobs:
   test-backend:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -31,49 +34,26 @@ jobs:
         run: |
           python -m venv venv
           source venv/bin/activate
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-    #  - name: Run backend tests
-    #    working-directory: ./backend
-      #  run: |
-        #  source venv/bin/activate
-         # pytest tests/ -v 
-    
-
-#  test-frontend:
-   # runs-on: ubuntu-latest
-   # steps:
-     # - uses: actions/checkout@v4
-
-      #- name: Set up Node.js
-       # uses: actions/setup-node@v4
-       # with:
-      #    node-version: '20'
-       #   cache: 'npm'
-       #   cache-dependency-path: frontend/package-lock.json
-
-   #   - name: Install frontend dependencies
-     #   working-directory: ./frontend
-     #   run: npm ci
-
-      #- name: Run frontend tests
-        #working-directory: ./frontend
-      #  run: npm test
-
-    #  - name: Build frontend
-      #  working-directory: ./frontend
-    #    run: npm run build
+      # Uncomment when you have backend tests
+      # - name: Run backend tests
+      #   working-directory: ./backend
+      #   run: |
+      #     source venv/bin/activate
+      #     pytest tests/ -v
 
   build-and-deploy:
-    needs: [test-backend]
+    needs: test-backend
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -82,26 +62,18 @@ jobs:
         run: |
           python -m venv venv
           source venv/bin/activate
-          pip install -r   requirements.txt        
-      
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
 
-      - name: Build and push Docker image
-        run: |
-          az acr login --name ${{ secrets.ACR_NAME }}
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/docproc-fastapi:${{ github.sha }} -f backend/Dockerfile .
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/docproc-fastapi:${{ github.sha }}
-
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          images: ${{ secrets.ACR_LOGIN_SERVER }}/docproc-fastapi:${{ github.sha }}
-
+      # ------------------------------------------------------------------
+      # Deploy infrastructure FIRST
+      # ------------------------------------------------------------------
       - name: Deploy infrastructure
         run: |
           az deployment group create \
@@ -109,12 +81,41 @@ jobs:
             --template-file ./infra/main.bicep \
             --parameters ./infra/parameters.json
 
-     # - name: Deploy frontend to Static Web Apps
-       # uses: Azure/static-web-apps-deploy@v1
-       # with:
-         # azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-         # repo_token: ${{ secrets.GITHUB_TOKEN }}
-         # action: "upload"
-         # app_location: "/frontend"
-         # api_location: ""
-         # output_location: ".next"
+      # ------------------------------------------------------------------
+      # Build Docker image
+      # ------------------------------------------------------------------
+      - name: Login to Azure Container Registry
+        run: |
+          az acr login --name ${{ secrets.ACR_NAME }}
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f backend/Dockerfile \
+            -t ${{ secrets.ACR_LOGIN_SERVER }}/docproc-fastapi:${{ github.sha }} \
+            .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/docproc-fastapi:${{ github.sha }}
+
+      # ------------------------------------------------------------------
+      # Deploy container
+      # ------------------------------------------------------------------
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          images: ${{ secrets.ACR_LOGIN_SERVER }}/docproc-fastapi:${{ github.sha }}
+
+      # Uncomment when Static Web App is ready
+      #
+      # - name: Deploy frontend
+      #   uses: Azure/static-web-apps-deploy@v1
+      #   with:
+      #     azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+      #     repo_token: ${{ secrets.GITHUB_TOKEN }}
+      #     action: upload
+      #     app_location: frontend
+      #     api_location: ""
+      #     output_location: .next
