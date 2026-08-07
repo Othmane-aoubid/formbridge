@@ -102,6 +102,7 @@ resource cosmosContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/con
 // SERVICE BUS
 // =========================
 
+/*
 resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2024-01-01' = {
   parent: serviceBusNamespace
   name: 'document-processing'
@@ -114,7 +115,7 @@ resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2024-01-01' = {
     deadLetteringOnMessageExpiration: false
   }
 }
-
+*/
 
 // =========================
 // KEY VAULT
