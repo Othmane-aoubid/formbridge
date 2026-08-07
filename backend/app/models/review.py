@@ -3,6 +3,17 @@ from typing import Optional, Dict, Any
 from app.models.document import ExtractedFields, DocumentStatus
 
 
+class ReviewQueueParams(BaseModel):
+    confidence_threshold: float = Field(default=0.8, alias="confidenceThreshold")
+    document_type: Optional[str] = Field(default=None, alias="documentType")
+    status: str = Field(default="needs_review")
+    skip: int = Field(default=0)
+    limit: int = Field(default=50)
+    
+    class Config:
+        populate_by_name = True
+
+
 class ReviewSubmit(BaseModel):
     corrected_fields: ExtractedFields = Field(alias="correctedFields")
     reviewer_id: str = Field(alias="reviewerId")

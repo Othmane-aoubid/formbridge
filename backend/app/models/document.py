@@ -50,6 +50,16 @@ class DocumentCreate(BaseModel):
     tenant_id: Optional[str] = Field(None, alias="tenantId")
 
 
+class DocumentCreateParams(BaseModel):
+    document_id: str = Field(alias="documentId")
+    blob_uri: str = Field(alias="blobUri")
+    filename: str
+    content_type: str = Field(alias="contentType")
+    document_type: Union[DocumentType, str]
+    tenant_id: Optional[str] = Field(None, alias="tenantId")
+    created_by: Optional[str] = Field(None, alias="createdBy")
+
+
 class DocumentResponse(BaseModel):
     id: str
     tenant_id: Optional[str] = Field(None, alias="tenantId")
@@ -77,9 +87,20 @@ class DocumentResponse(BaseModel):
         populate_by_name = True
 
 
+class DocumentSearchParams(BaseModel):
+    query: Optional[str] = None
+    document_type: Optional[str] = Field(None, alias="documentType")
+    status: Optional[str] = None
+    skip: int = 0
+    limit: int = 50
+
+    class Config:
+        populate_by_name = True
+
+
 class UploadSasResponse(BaseModel):
     document_id: str = Field(alias="documentId")
     upload_sas_url: str = Field(alias="uploadSasUrl")
-    
+
     class Config:
         populate_by_name = True

@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException
-from typing import Dict, Optional
-from app.models.review import ReviewSubmit, ReviewQueueItem, ReviewResponse
+from fastapi import APIRouter, HTTPException, Depends
+from typing import Dict
+from app.models.review import ReviewSubmit, ReviewQueueItem, ReviewResponse, ReviewQueueParams
 from app.services.review_service import ReviewService
 
 router = APIRouter()
@@ -10,29 +10,17 @@ review_service = ReviewService()
 
 
 @router.get("/queue")
-async def get_review_queue(
-    confidence_threshold: Optional[float] = 0.8,
-    document_type: Optional[str] = None,
-    status: str = "needs_review",
-    skip: int = 0,
-    limit: int = 50
-) -> Dict[str, object]:
+async def get_review_queue(params: ReviewQueueParams = Depends()) -> Dict[str, object]:
     """
     Get documents pending review with filters
     """
-    queue = await review_service.get_review_queue(
-        confidence_threshold=confidence_threshold,
-        document_type=document_type,
-        status=status,
-        skip=skip,
-        limit=limit
-    )
+    queue = await review_service.get_review_queue(params)
     
     return {
         "queue": queue,
         "count": len(queue),
-        "skip": skip,
-        "limit": limit
+        "skip": params.skip,
+        "limit": params.limit
     }
 
 
