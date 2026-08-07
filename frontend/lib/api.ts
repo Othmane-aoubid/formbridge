@@ -299,6 +299,51 @@ class ApiClient {
       }
     );
   }
+
+  async exportDocument(documentId: string, format: string): Promise<Blob> {
+    const url = `${this.baseUrl}/api/documents/${documentId}/export?format=${format}`;
+    const headers: Record<string, string> = {};
+
+    const token = this.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Export failed: ${response.statusText}`);
+    }
+
+    return response.blob();
+  }
+
+  async exportDocumentsBatch(documentIds: string[], format: string): Promise<Blob> {
+    const url = `${this.baseUrl}/api/documents/export/batch`;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    const token = this.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ document_ids: documentIds, format: format }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Batch export failed: ${response.statusText}`);
+    }
+
+    return response.blob();
+  }
 }
 
 export const apiClient = new ApiClient();
