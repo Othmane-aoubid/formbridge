@@ -35,7 +35,7 @@ resource archiveContainer 'Microsoft.Storage/storageAccounts/blobServices/contai
   }
 }
 
-// Document Intelligence (Form Recognizer)
+// Document Intelligence
 resource documentIntelligence 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   name: documentIntelligenceName
   location: location
@@ -71,7 +71,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
   location: location
   kind: 'GlobalDocumentDB'
   properties: {
-    databaseAccountOfferType: 'standard'
+    databaseAccountOfferType: 'Standard'
     locations: [
       {
         locationName: location
@@ -100,7 +100,9 @@ resource cosmosContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/con
     resource: {
       id: 'documents'
       partitionKey: {
-        paths: ['/id']
+        paths: [
+          '/id'
+        ]
         kind: 'Hash'
       }
     }
@@ -108,7 +110,7 @@ resource cosmosContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/con
 }
 
 // Service Bus
-resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-17-preview' = {
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2024-01-01' = {
   name: serviceBusNamespaceName
   location: location
   sku: {
@@ -116,7 +118,7 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-17-preview
   }
 }
 
-resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2022-10-17-preview' = {
+resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2024-01-01' = {
   name: '${serviceBusNamespaceName}/document-processing'
   properties: {
     lockDuration: 'PT5M'
@@ -142,7 +144,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   }
 }
 
-// Web App for FastAPI
+// Web App
 resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   name: webAppName
   location: location
@@ -160,7 +162,7 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
 
 // Key Vault
 resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
-  name: 'formbridge-kv-${uniqueString(resourceGroup().id)}'
+  name: 'fbkv${take(uniqueString(resourceGroup().id), 8)}'
   location: location
   properties: {
     sku: {
