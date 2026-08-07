@@ -38,6 +38,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' exis
 
 resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2024-01-01' existing = {
   name: serviceBusNamespaceName
+  scope: resourceGroup('DefaultResourceGroup-PAR')
 }
 
 
