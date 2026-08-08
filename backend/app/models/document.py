@@ -78,7 +78,7 @@ class DocumentResponse(BaseModel):
     processing_started_at: Optional[datetime] = Field(None, alias="processingStartedAt")
     processing_completed_at: Optional[datetime] = Field(None, alias="processingCompletedAt")
     processing_error: Optional[str] = Field(None, alias="processingError")
-    ocr_text: Optional[str] = Field(None, alias="ocrText")
+    ocr_text: Optional[Any] = Field(None, alias="ocrText")
     tables: Optional[List[Dict[str, Any]]] = Field(None, alias="tables")
     key_value_pairs: Optional[Dict[str, str]] = Field(None, alias="keyValuePairs")
     preview_url: Optional[str] = Field(None, alias="previewUrl")

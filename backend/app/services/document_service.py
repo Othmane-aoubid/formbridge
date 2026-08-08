@@ -82,9 +82,6 @@ class DocumentService:
         """
         try:
             item = self.container.read_item(item=document_id, partition_key=document_id)
-            # Ensure ocrText is included in the response
-            if 'ocrText' in item:
-                item['ocr_text'] = item['ocrText']
             return DocumentResponse(**item)
         except Exception as e:
             logger.error(f"Error getting document {document_id}: {str(e)}")
