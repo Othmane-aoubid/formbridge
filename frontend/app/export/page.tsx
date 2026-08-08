@@ -47,7 +47,8 @@ export default function ExportPage() {
     const matchesType = documentTypeFilter === 'all' || doc.documentType === documentTypeFilter;
     const matchesDateFrom = !dateFrom || new Date(doc.createdAt) >= new Date(dateFrom);
     const matchesDateTo = !dateTo || new Date(doc.createdAt) <= new Date(dateTo);
-    return matchesStatus && matchesType && matchesDateFrom && matchesDateTo;
+    const notNeedsReview = doc.status !== 'needs_review'; // Exclude needs_review documents
+    return matchesStatus && matchesType && matchesDateFrom && matchesDateTo && notNeedsReview;
   });
 
   function toggleDocumentSelection(docId: string) {
@@ -73,28 +74,32 @@ export default function ExportPage() {
       setError('Please select at least one document to export');
       return;
     }
+    if (selectedDocuments.size > 1) {
+      setError('Please select only one document to export');
+      return;
+    }
     setExporting(true);
     setError('');
     setSuccess('');
     try {
-      const documentIds = Array.from(selectedDocuments);
-      const blob = await apiClient.exportDocumentsBatch(documentIds, exportFormat);
+      const documentId = Array.from(selectedDocuments)[0];
+      const blob = await apiClient.exportDocument(documentId, exportFormat);
       
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-      a.download = `documents_export_${timestamp}.${exportFormat === 'excel' ? 'xlsx' : exportFormat}`;
+      a.download = `document_export_${timestamp}.${exportFormat === 'excel' ? 'xlsx' : exportFormat}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       
-      setSuccess(`Successfully exported ${documentIds.length} documents as ${exportFormat.toUpperCase()}`);
+      setSuccess(`Successfully exported document as ${exportFormat.toUpperCase()}`);
     } catch (error) {
-      console.error('Failed to export documents:', error);
-      setError('Failed to export documents');
+      console.error('Failed to export document:', error);
+      setError('Failed to export document');
     } finally {
       setExporting(false);
     }
@@ -141,9 +146,9 @@ export default function ExportPage() {
                 className="w-full bg-card-secondary border border-card radius-md px-4 py-2 text-primary focus:outline-none focus:border-accent-blue"
               >
                 <option value="all">All Statuses</option>
+                <option value="validated">Validated</option>
                 <option value="completed">Completed</option>
                 <option value="processing">Processing</option>
-                <option value="needs_review">Needs Review</option>
                 <option value="failed">Failed</option>
               </select>
             </div>

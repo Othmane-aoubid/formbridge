@@ -7,6 +7,8 @@ import logging
 import csv
 import json
 import io
+import ast
+import re
 from datetime import datetime
 from app.models.document import DocumentCreate, DocumentResponse, UploadSasResponse, DocumentCreateParams, DocumentSearchParams
 from app.services.storage_service import StorageService
@@ -294,27 +296,78 @@ async def export_document(document_id: str, format: str = "csv"):
 
 
 async def _export_csv(document):
-    """Export document as CSV"""
+    """Export document as proper CSV table with section, field_name, value columns"""
     output = io.StringIO()
     writer = csv.writer(output)
     
-    # Header
-    writer.writerow(["Field", "Value"])
+    # Header row - consistent 3 columns
+    writer.writerow(["section", "field_name", "value"])
     
-    # Basic metadata
-    writer.writerow(["Document ID", document.id])
-    writer.writerow(["Filename", document.filename])
-    writer.writerow(["Document Type", document.document_type.value if hasattr(document, 'document_type') else 'Unknown'])
-    writer.writerow(["Status", document.status])
-    writer.writerow(["Created At", document.created_at])
-    writer.writerow(["Processed At", document.processing_completed_at if hasattr(document, 'processing_completed_at') else 'N/A'])
-    writer.writerow([])
+    # Helper function to write rows
+    def write_row(section, field_name, value):
+        """Write a single row with proper value handling"""
+        if value is None:
+            value = ""
+        elif isinstance(value, (dict, list)):
+            # Convert to valid JSON (double-quoted)
+            value = json.dumps(value, default=str, ensure_ascii=False)
+        else:
+            value = str(value)
+            # Handle enum reprs like "DocumentStatus.validated" -> "validated"
+            if '.' in value and not value.startswith(('http', 'https', 'ftp')):
+                parts = value.split('.')
+                if len(parts) == 2 and parts[0][0].isupper() and parts[1].islower():
+                    value = parts[1]
+            # Handle string values that contain Python literal syntax (single-quoted dicts/lists)
+            if (value.startswith('{') and "'" in value) or (value.startswith('[') and "'" in value):
+                try:
+                    # Parse Python literal and convert to valid JSON
+                    parsed = ast.literal_eval(value)
+                    value = json.dumps(parsed, default=str, ensure_ascii=False)
+                except:
+                    pass  # Keep original if parsing fails
+            # Handle Python datetime reprs like "datetime.datetime(...)" - convert to ISO string if possible
+            if value.startswith('datetime.datetime(') or value.startswith('datetime.date('):
+                try:
+                    # Extract the datetime string and convert to ISO format
+                    match = re.search(r'datetime\.datetime\(([^)]+)\)', value)
+                    if match:
+                        # Parse the arguments and create ISO string
+                        args = match.group(1).split(',')
+                        if len(args) >= 6:
+                            year, month, day, hour, minute, second = [int(a.strip()) for a in args[:6]]
+                            microsecond = int(args[6].strip()) if len(args) > 6 else 0
+                            from datetime import datetime as dt
+                            iso_str = dt(year, month, day, hour, minute, second, microsecond).isoformat()
+                            value = iso_str
+                except:
+                    pass  # Keep original if conversion fails
+        writer.writerow([section, field_name, value])
     
-    # Extracted fields
+    # Document Info section
+    write_row("document_info", "id", document.id)
+    write_row("document_info", "filename", document.filename)
+    write_row("document_info", "document_type", document.document_type)
+    write_row("document_info", "status", document.status)
+    write_row("document_info", "created_at", document.created_at)
+    write_row("document_info", "created_by", document.created_by if hasattr(document, 'created_by') else "")
+    write_row("document_info", "tenant_id", document.tenant_id if hasattr(document, 'tenant_id') else "")
+    write_row("document_info", "blob_uri", document.blob_uri if hasattr(document, 'blob_uri') else "")
+    write_row("document_info", "content_type", document.content_type if hasattr(document, 'content_type') else "")
+    
+    # Processing Info section
+    write_row("processing_info", "processing_progress", document.processing_progress if hasattr(document, 'processing_progress') else "")
+    write_row("processing_info", "processing_step", document.processing_step if hasattr(document, 'processing_step') else "")
+    write_row("processing_info", "processing_started_at", document.processing_started_at if hasattr(document, 'processing_started_at') else "")
+    write_row("processing_info", "processing_completed_at", document.processing_completed_at if hasattr(document, 'processing_completed_at') else "")
+    write_row("processing_info", "processing_error", document.processing_error if hasattr(document, 'processing_error') else "")
+    
+    # Extracted Fields section
     if hasattr(document, 'extracted_fields') and document.extracted_fields:
-        writer.writerow(["Extracted Fields"])
-        # Convert to dict if it's a Pydantic model
-        if hasattr(document.extracted_fields, 'dict'):
+        # Convert to dict if it's a Pydantic RootModel
+        if hasattr(document.extracted_fields, 'model_dump'):
+            extracted_fields = document.extracted_fields.model_dump()
+        elif hasattr(document.extracted_fields, 'dict'):
             extracted_fields = document.extracted_fields.dict()
         elif isinstance(document.extracted_fields, dict):
             extracted_fields = document.extracted_fields
@@ -322,14 +375,14 @@ async def _export_csv(document):
             extracted_fields = {}
         
         for key, value in extracted_fields.items():
-            if value is not None:
-                writer.writerow([key, value])
-        writer.writerow([])
+            write_row("extracted_fields", key, value)
     
-    # Confidence scores
+    # Confidence Scores section
     if hasattr(document, 'confidence_scores') and document.confidence_scores:
-        writer.writerow(["Confidence Scores"])
-        if hasattr(document.confidence_scores, 'dict'):
+        # Convert to dict if it's a Pydantic RootModel
+        if hasattr(document.confidence_scores, 'model_dump'):
+            confidence_scores = document.confidence_scores.model_dump()
+        elif hasattr(document.confidence_scores, 'dict'):
             confidence_scores = document.confidence_scores.dict()
         elif isinstance(document.confidence_scores, dict):
             confidence_scores = document.confidence_scores
@@ -337,14 +390,77 @@ async def _export_csv(document):
             confidence_scores = {}
         
         for key, value in confidence_scores.items():
-            if value is not None:
-                writer.writerow([key, f"{value:.2%}" if isinstance(value, (int, float)) else value])
-        writer.writerow([])
+            write_row("confidence_scores", key, value)
     
-    # OCR text (truncated)
+    # Key-Value Pairs section
+    if hasattr(document, 'key_value_pairs') and document.key_value_pairs:
+        if isinstance(document.key_value_pairs, dict):
+            for key, value in document.key_value_pairs.items():
+                write_row("key_value_pairs", key, value)
+    
+    # Tables section - export entire table structures as JSON
+    if hasattr(document, 'tables') and document.tables:
+        for i, table in enumerate(document.tables):
+            write_row("tables", f"table_{i+1}", table)
+    
+    # Paragraphs section - export entire paragraph structures as JSON
+    if hasattr(document, 'paragraphs') and document.paragraphs:
+        for i, paragraph in enumerate(document.paragraphs):
+            write_row("paragraphs", f"paragraph_{i+1}", paragraph)
+    
+    # OCR Text section - preserve full text in single cell
     if hasattr(document, 'ocr_text') and document.ocr_text:
-        writer.writerow(["OCR Text"])
-        writer.writerow([document.ocr_text[:5000]])  # Limit to 5000 chars
+        write_row("ocr_text", "full_text", document.ocr_text)
+    
+    # Audit Trail section - convert to proper JSON with ISO timestamps
+    if hasattr(document, 'audit') and document.audit:
+        for i, audit_entry in enumerate(document.audit):
+            # Convert audit entry to proper JSON format
+            if isinstance(audit_entry, dict):
+                # Convert datetime objects to ISO strings
+                audit_json = {}
+                for key, val in audit_entry.items():
+                    if hasattr(val, 'isoformat'):  # datetime object
+                        audit_json[key] = val.isoformat()
+                    else:
+                        audit_json[key] = val
+                write_row("audit_trail", f"entry_{i+1}", audit_json)
+            elif isinstance(audit_entry, str):
+                # Parse string format like "actor='X' action='Y' timestamp=datetime.datetime(...)"
+                try:
+                    audit_dict = {}
+                    # Parse key='value' pairs using dict and findall for cleaner parsing
+                    kv_pattern = r"(\w+)='([^']*)'"
+                    audit_dict.update(dict(re.findall(kv_pattern, audit_entry)))
+                    
+                    # Parse datetime.datetime(...) if present
+                    dt_pattern = r"timestamp=datetime\.datetime\(([^)]+)\)"
+                    dt_match = re.search(dt_pattern, audit_entry)
+                    if dt_match:
+                        args = dt_match.group(1).split(',')
+                        if len(args) >= 6:
+                            year, month, day, hour, minute, second = [int(a.strip()) for a in args[:6]]
+                            microsecond = int(args[6].strip()) if len(args) > 6 else 0
+                            iso_str = datetime(year, month, day, hour, minute, second, microsecond).isoformat()
+                            audit_dict['timestamp'] = iso_str
+                    
+                    write_row("audit_trail", f"entry_{i+1}", audit_dict)
+                except:
+                    # Fallback to original string if parsing fails
+                    write_row("audit_trail", f"entry_{i+1}", audit_entry)
+            else:
+                write_row("audit_trail", f"entry_{i+1}", audit_entry)
+    
+    # Additional Fields section
+    document_dict = document.model_dump() if hasattr(document, 'model_dump') else document.dict()
+    known_fields = {'id', 'filename', 'document_type', 'status', 'created_at', 'created_by', 'tenant_id', 
+                   'blob_uri', 'content_type', 'processing_progress', 'processing_step', 'processing_started_at',
+                   'processing_completed_at', 'processing_error', 'extracted_fields', 'confidence_scores',
+                   'key_value_pairs', 'tables', 'paragraphs', 'ocr_text', 'audit', 'preview_url'}
+    
+    additional_fields = {k: v for k, v in document_dict.items() if k not in known_fields and v is not None}
+    for key, value in additional_fields.items():
+        write_row("additional_fields", key, value)
     
     output.seek(0)
     
