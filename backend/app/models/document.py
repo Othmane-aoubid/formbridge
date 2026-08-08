@@ -59,6 +59,9 @@ class DocumentCreateParams(BaseModel):
     tenant_id: Optional[str] = Field(None, alias="tenantId")
     created_by: Optional[str] = Field(None, alias="createdBy")
 
+    class Config:
+        populate_by_name = True
+
 
 class DocumentResponse(BaseModel):
     id: str
