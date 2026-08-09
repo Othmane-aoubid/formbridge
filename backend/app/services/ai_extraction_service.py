@@ -63,12 +63,18 @@ class AIExtractionService:
             
             logger.info(f"Sending OCR text to AI extraction (length: {len(ocr_text)} chars)")
             
+            # Conditionally increase max_tokens for large documents to prevent truncation
+            if len(prompt) > 15000:
+                max_tokens = 8000
+            else:
+                max_tokens = 4096
+            
             completion = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
                 top_p=0.95,
-                max_tokens=4096,
+                max_tokens=max_tokens,
                 stream=False
             )
             

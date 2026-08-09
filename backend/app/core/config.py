@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: list = ["http://localhost:3000", "http://localhost:8000", "https://formbridge-mauve.vercel.app"]
     
+    # Frontend URL for password reset links
+    frontend_base_url: str = "http://localhost:3000"
+    
     # NVIDIA NIM API (optional fallback)
     nvidia_nim_api_key: Optional[str] = None
     nvidia_nim_model: str = "minimaxai/minimax-m3"

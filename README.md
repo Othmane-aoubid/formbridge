@@ -20,6 +20,7 @@ FormBridge enables organizations to automate document workflows by:
 - Document reprocessing capabilities
 - Comprehensive audit trail and compliance features
 - JWT-based authentication with bcrypt password hashing
+- Password reset functionality via Azure Communication Services email
 - Error tracking with Honeybadger integration
 
 ## System Architecture
@@ -68,6 +69,7 @@ Azure Services:
 - **Azure AI Document Intelligence**: `formbridgedci` - AI-based document analysis
 - **Azure AI Search**: `formbridgess` - Document indexing and search
 - **Azure Service Bus**: `formbridgenamespace` - Asynchronous messaging
+- **Azure Communication Services**: Email delivery for password reset functionality
 - **Application Insights**: Monitoring, telemetry, and diagnostics
 - **Log Analytics Workspace**: Log storage and analysis
 - **Managed Identities**: Azure identity-based access between services
@@ -187,6 +189,13 @@ AZURE_SEARCH_INDEX_NAME=your_search_index_name
 AZURE_SERVICE_BUS_CONNECTION_STRING=your_service_bus_connection_string
 AZURE_SERVICE_BUS_QUEUE_NAME=your_queue_name
 
+# Azure Communication Services (Email)
+AZURE_COMMUNICATION_CONNECTION_STRING=your_communication_connection_string
+SENDER_ADDRESS=your_verified_sender_email
+
+# Frontend URL for password reset links
+FRONTEND_BASE_URL=http://localhost:3000
+
 # NVIDIA NIM API (Optional fallback)
 NVIDIA_NIM_API_KEY=your_nvidia_api_key
 NVIDIA_NIM_MODEL=your_nvidia_model_name
@@ -207,6 +216,8 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ### Authentication
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - Login and receive JWT token
+- `POST /api/auth/forgot-password` - Request password reset email
+- `POST /api/auth/reset-password` - Reset password with token
 - `GET /api/auth/me` - Get current user info
 
 ### Documents
@@ -236,6 +247,14 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 - JWT tokens are used for authentication with configurable expiration
 - CORS is configured to allow only specific origins
 
+## Known Limitations
+
+### Large Document Processing
+- **Limitation**: Documents with very large content (typically PDFs with >15 pages or extensive text) may encounter AI extraction response truncation
+- **Reason**: The NVIDIA NIM API has a maximum token limit for responses. For documents with extensive content, the AI response can exceed this limit, causing JSON parse failures
+- **Mitigation**: The system automatically increases the max_tokens parameter from 4096 to 8000 for large documents (detected when prompt length > 15000 characters). Documents that still fail are marked with a clear error message: "AI extraction response was too large or malformed for this document."
+- **Workaround**: For extremely large documents, consider splitting them into smaller files before upload
+
 ## Debugging and Deployment Work Completed
 
 The following issues have been resolved during development:
@@ -250,6 +269,9 @@ The following issues have been resolved during development:
 - Updated CORS origins to include Vercel frontend domain
 - Added temporary debug logging for authentication diagnostics
 - Resolved bcrypt/passlib compatibility issues
+- Implemented Azure Communication Services for password reset email delivery
+- Added conditional max_tokens scaling for large documents to prevent AI response truncation
+- Added graceful error handling for AI extraction JSON parse failures
 
 ## Future Improvements
 

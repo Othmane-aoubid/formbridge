@@ -146,6 +146,12 @@ class ProcessingService:
                 )
                 timing.update(ai_timing)
                 nvidia_already_called = True
+                
+                # Check for JSON parse errors and mark document as failed
+                if "ai_extraction_error" in ai_timing:
+                    logger.error(f"AI extraction failed for document {document_id}: {ai_timing['ai_extraction_error']}")
+                    await self._mark_failed(document_id, "AI extraction response was too large or malformed for this document.")
+                    return False
 
             # Create analysis result structure from extraction data
             analysis_result = self._create_analysis_result(full_pdf_text, ai_extracted_fields)
