@@ -171,7 +171,7 @@ async def forgot_password(request: ForgotPasswordRequest):
     try:
         email_client = EmailClient.from_connection_string(settings.azure_communication_connection_string)
         
-        reset_link = f"{settings.cors_origins[0]}/reset-password?token={reset_token}"
+        reset_link = f"{settings.frontend_base_url}/reset-password?token={reset_token}"
         
         message = {
             "senderAddress": settings.senderAddress,
