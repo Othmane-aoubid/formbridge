@@ -19,11 +19,6 @@ export default function ForgotPasswordPage() {
     try {
       const response = await apiClient.forgotPassword(email);
       setMessage(response.message);
-      
-      // For testing purposes, show the token if provided
-      if (response.reset_token) {
-        setMessage(`${response.message}\n\nReset token (for testing): ${response.reset_token}`);
-      }
     } catch (err: any) {
       setError(err.message || 'Failed to send password reset email');
     } finally {

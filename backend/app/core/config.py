@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     azure_service_bus_connection_string: str
     azure_service_bus_queue_name: str = "document-processing"
     
+    # Azure Communication Services (Email)
+    azure_communication_connection_string: str
+    senderAddress: str
+    
     # Authentication
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
