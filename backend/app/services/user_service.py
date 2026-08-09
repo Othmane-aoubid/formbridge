@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from azure.cosmos import CosmosClient, PartitionKey
 from passlib.context import CryptContext
 from typing import Optional
