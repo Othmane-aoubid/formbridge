@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel, EmailStr
 import secrets
+from azure.communication.email import EmailClient
 
 from app.core.config import settings
 from app.services.user_service import user_service
@@ -166,12 +167,32 @@ async def forgot_password(request: ForgotPasswordRequest):
     
     logger.info(f"Password reset token generated for {request.email}")
     
-    # In production, send email with reset link containing the token
-    # For now, return the token for testing
-    return {
-        "message": "Password reset link sent to email",
-        "reset_token": reset_token  # Remove this in production
-    }
+    # Send password reset email using Azure Communication Services
+    try:
+        email_client = EmailClient.from_connection_string(settings.azure_communication_connection_string)
+        
+        reset_link = f"{settings.cors_origins[0]}/reset-password?token={reset_token}"
+        
+        message = {
+            "senderAddress": settings.senderAddress,
+            "recipients": {
+                "to": [{"address": user.email}]
+            },
+            "content": {
+                "subject": "Password Reset Request",
+                "plainText": f"Click the following link to reset your password: {reset_link}\n\nThis link will expire in 1 hour.",
+                "html": f"<p>Click the following link to reset your password:</p><p><a href='{reset_link}'>Reset Password</a></p><p>This link will expire in 1 hour.</p>"
+            }
+        }
+        
+        poller = email_client.begin_send(message)
+        result = poller.result()
+        logger.info(f"Password reset email sent successfully to {user.email}")
+    except Exception as e:
+        logger.error(f"Failed to send password reset email to {user.email}: {str(e)}")
+        # Still return success to avoid revealing user existence, but log the error
+    
+    return {"message": "If the email exists, a password reset link has been sent"}
 
 
 @router.post("/reset-password")
