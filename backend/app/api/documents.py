@@ -16,6 +16,7 @@ from app.services.document_service import DocumentService
 from app.services.processing_service import ProcessingService
 from app.services.service_bus_service import ServiceBusService
 from app.core.config import settings
+from app.api.auth import get_current_user_dependency
 
 
 class BatchExportRequest(BaseModel):
@@ -42,7 +43,8 @@ async def upload_document(
     file: UploadFile = File(...),
     filename: str = Form(...),
     content_type: str = Form(...),
-    document_type: str = Form(...)
+    document_type: str = Form(...),
+    current_user = Depends(get_current_user_dependency)
 ) -> DocumentResponse:
     """
     Upload document to Azure Storage and create record in Cosmos DB
@@ -64,7 +66,7 @@ async def upload_document(
         'Content-Type': content_type
     })
     
-    # Create document record in Cosmos DB
+    # Create document record in Cosmos DB with authenticated user's ID
     blob_uri = f"https://{settings.azure_storage_account_name}.blob.core.windows.net/incoming/{document_id}/{filename}"
     document = await document_service.create_document(
         DocumentCreateParams(
@@ -73,7 +75,7 @@ async def upload_document(
             filename=filename,
             content_type=content_type,
             document_type=document_type,
-            created_by="user"
+            created_by=current_user.id
         )
     )
     
@@ -99,7 +101,8 @@ async def complete_upload(
     document_id: str,
     filename: str,
     content_type: str,
-    document_type: str
+    document_type: str,
+    current_user = Depends(get_current_user_dependency)
 ) -> DocumentResponse:
     """
     Create document record in Cosmos DB after successful upload
@@ -113,7 +116,7 @@ async def complete_upload(
             filename=filename,
             content_type=content_type,
             document_type=document_type,
-            created_by="user"
+            created_by=current_user.id
         )
     )
     
@@ -133,11 +136,14 @@ async def complete_upload(
 
 
 @router.get("/{document_id}", response_model=DocumentResponse)
-async def get_document(document_id: str) -> DocumentResponse:
+async def get_document(
+    document_id: str,
+    current_user = Depends(get_current_user_dependency)
+) -> DocumentResponse:
     """
     Get document metadata and extracted fields
     """
-    document = await document_service.get_document(document_id)
+    document = await document_service.get_document_with_ownership_check(document_id, current_user.id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
     
@@ -152,11 +158,14 @@ async def get_document(document_id: str) -> DocumentResponse:
 
 
 @router.get("/{document_id}/download")
-async def get_download_sas(document_id: str) -> Dict[str, str]:
+async def get_download_sas(
+    document_id: str,
+    current_user = Depends(get_current_user_dependency)
+) -> Dict[str, str]:
     """
     Generate a SAS URL for document download
     """
-    document = await document_service.get_document(document_id)
+    document = await document_service.get_document_with_ownership_check(document_id, current_user.id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
     
@@ -170,10 +179,11 @@ async def search_documents(
     document_type: Optional[str] = None,
     status: Optional[str] = None,
     skip: int = 0,
-    limit: int = 50
+    limit: int = 50,
+    current_user = Depends(get_current_user_dependency)
 ) -> Dict[str, object]:
     """
-    Search documents with filters
+    Search documents with filters (only returns documents belonging to authenticated user)
     """
     params = DocumentSearchParams(
         query=query,
@@ -182,7 +192,7 @@ async def search_documents(
         skip=skip,
         limit=limit
     )
-    results = await document_service.search_documents(params)
+    results = await document_service.search_documents(params, user_id=current_user.id)
 
     return {
         "results": results,
@@ -193,11 +203,14 @@ async def search_documents(
 
 
 @router.post("/{document_id}/reprocess")
-async def reprocess_document(document_id: str) -> Dict[str, str]:
+async def reprocess_document(
+    document_id: str,
+    current_user = Depends(get_current_user_dependency)
+) -> Dict[str, str]:
     """
     Trigger reprocessing of a document
     """
-    document = await document_service.get_document(document_id)
+    document = await document_service.get_document_with_ownership_check(document_id, current_user.id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
     
@@ -230,11 +243,14 @@ async def reprocess_document(document_id: str) -> Dict[str, str]:
 
 
 @router.post("/{document_id}/stop")
-async def stop_processing(document_id: str) -> Dict[str, str]:
+async def stop_processing(
+    document_id: str,
+    current_user = Depends(get_current_user_dependency)
+) -> Dict[str, str]:
     """
     Stop processing of a document
     """
-    document = await document_service.get_document(document_id)
+    document = await document_service.get_document_with_ownership_check(document_id, current_user.id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
@@ -253,11 +269,14 @@ async def stop_processing(document_id: str) -> Dict[str, str]:
 
 
 @router.delete("/{document_id}")
-async def delete_document(document_id: str) -> Dict[str, str]:
+async def delete_document(
+    document_id: str,
+    current_user = Depends(get_current_user_dependency)
+) -> Dict[str, str]:
     """
     Delete a document
     """
-    document = await document_service.get_document(document_id)
+    document = await document_service.get_document_with_ownership_check(document_id, current_user.id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
@@ -275,11 +294,15 @@ async def delete_document(document_id: str) -> Dict[str, str]:
 
 
 @router.get("/{document_id}/export")
-async def export_document(document_id: str, format: str = "csv"):
+async def export_document(
+    document_id: str,
+    format: str = "csv",
+    current_user = Depends(get_current_user_dependency)
+):
     """
     Export a document in specified format (csv, excel, json)
     """
-    document = await document_service.get_document(document_id)
+    document = await document_service.get_document_with_ownership_check(document_id, current_user.id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
@@ -505,12 +528,24 @@ async def _export_json(document):
 
 
 @router.post("/export/batch")
-async def export_documents_batch(request: BatchExportRequest):
+async def export_documents_batch(
+    request: BatchExportRequest,
+    current_user = Depends(get_current_user_dependency)
+):
     """
     Export multiple documents in specified format
     """
     if not request.document_ids:
         raise HTTPException(status_code=400, detail="No document IDs provided")
+    
+    # Verify ownership of ALL requested documents before proceeding
+    ownership_verified = await document_service.verify_documents_ownership(
+        request.document_ids,
+        current_user.id
+    )
+    
+    if not ownership_verified:
+        raise HTTPException(status_code=403, detail="You do not have permission to export one or more of the requested documents")
     
     format = request.format.lower()
     

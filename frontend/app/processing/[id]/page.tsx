@@ -23,6 +23,21 @@ export default function DocumentProcessingPage() {
   }, [documentId]);
 
   useEffect(() => {
+    // Poll for document status updates while processing
+    let interval: NodeJS.Timeout;
+    
+    if (document?.status === 'processing') {
+      interval = setInterval(() => {
+        loadDocument();
+      }, 3000); // Poll every 3 seconds
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [document?.status, documentId]);
+
+  useEffect(() => {
     // Show notification when processing completes
     if (previousStatus === 'processing' && document && document.status !== 'processing') {
       if (document.status === 'completed') {
