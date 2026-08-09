@@ -155,18 +155,18 @@ export default function UploadPage() {
                         </button>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         <div className="h-16 w-16 rounded-full bg-accent-blue/20 flex items-center justify-center mx-auto">
                           <span className="text-3xl">📄</span>
                         </div>
                         <div>
-                          <p className="text-primary font-medium">Drag and drop your file here</p>
-                          <p className="text-secondary text-sm">or click to browse</p>
+                          <p className="text-primary font-medium text-lg">Drag and drop your file here</p>
+                          <p className="text-secondary text-sm">or click the button below to browse</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="px-4 py-2 bg-accent-blue/20 text-accent-blue rounded-md text-sm font-medium hover:bg-accent-blue/30 transition-colors"
+                          className="px-8 py-4 bg-accent-blue text-white rounded-lg text-base font-semibold hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
                         >
                           Choose file
                         </button>
@@ -182,17 +182,19 @@ export default function UploadPage() {
                 <button
                   type="submit"
                   disabled={!file || uploading}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium text-white bg-primary-cta radius-lg bg-primary-cta-hover shadow-card hover:shadow-soft transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex justify-center items-center py-4 px-6 border border-transparent text-base font-semibold text-white bg-primary-cta radius-lg bg-primary-cta-hover shadow-card hover:shadow-soft transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed space-x-3"
                 >
                   {uploading ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Uploading...
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Uploading...</span>
                     </>
                   ) : (
                     <>
-                      <span className="text-xl mr-2">📤</span>
-                      Upload Document
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <span>Upload Document</span>
                     </>
                   )}
                 </button>

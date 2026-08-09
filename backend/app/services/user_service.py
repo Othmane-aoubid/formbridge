@@ -84,6 +84,35 @@ class UserService:
             logger.info(f"[AUTH_DEBUG] Password verification failed - email: {email}")
             return None
         return user
+    
+    async def update_user_password(self, email: str, new_hashed_password: str) -> bool:
+        """
+        Update user's password
+        """
+        try:
+            query = "SELECT * FROM c WHERE c.email = @email"
+            parameters = [{"name": "@email", "value": email}]
+            results = list(self.container.query_items(
+                query=query,
+                parameters=parameters,
+                enable_cross_partition_query=True
+            ))
+            
+            if not results:
+                logger.warning(f"User not found for password update: {email}")
+                return False
+            
+            user = results[0]
+            user['hashed_password'] = new_hashed_password
+            user['updated_at'] = datetime.utcnow().isoformat()
+            
+            self.container.replace_item(item=user['id'], body=user)
+            logger.info(f"Password updated successfully for: {email}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating password for {email}: {str(e)}")
+            return False
 
 
 user_service = UserService()

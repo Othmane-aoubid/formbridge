@@ -20,6 +20,104 @@ export default function ReviewDetailPage() {
   const [success, setSuccess] = useState('');
   const [comments, setComments] = useState('');
   const [extractedFields, setExtractedFields] = useState<ReviewResponse['extractedFields']>({});
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set());
+
+  function getAllFields(obj: any, prefix: string = ''): Array<{key: string, value: any, path: string, section: string}> {
+    const result: Array<{key: string, value: any, path: string, section: string}> = [];
+    
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const newKey = prefix ? `${prefix}.${key}` : key;
+        const value = obj[key];
+        const section = prefix.split('.')[0] || 'General';
+        
+        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+          // Recursively get nested object fields
+          result.push(...getAllFields(value, newKey));
+        } else if (Array.isArray(value)) {
+          // Add array items as individual fields
+          value.forEach((item, index) => {
+            if (item !== null && typeof item === 'object') {
+              result.push(...getAllFields(item, `${newKey}[${index}]`));
+            } else {
+              result.push({
+                key: `${key}[${index}]`,
+                value: item,
+                path: newKey,
+                section: section
+              });
+            }
+          });
+        } else {
+          result.push({
+            key: key,
+            value: value,
+            path: newKey,
+            section: section
+          });
+        }
+      }
+    }
+    
+    return result;
+  }
+
+  function toggleSection(section: string) {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(section)) {
+        newSet.delete(section);
+      } else {
+        newSet.add(section);
+      }
+      return newSet;
+    });
+  }
+
+  function toggleField(path: string) {
+    setExpandedFields(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(path)) {
+        newSet.delete(path);
+      } else {
+        newSet.add(path);
+      }
+      return newSet;
+    });
+  }
+
+  function getFieldValue(path: string, obj: any): any {
+    const keys = path.split('.');
+    let current = obj;
+    for (const key of keys) {
+      if (current && current[key] !== undefined) {
+        current = current[key];
+      } else {
+        return undefined;
+      }
+    }
+    return current;
+  }
+
+  function handleFieldChange(field: string, value: any) {
+    setExtractedFields((prev) => {
+      // Handle nested field updates
+      const keys = field.split('.');
+      const lastKey = keys.pop()!;
+      
+      let current: any = prev;
+      for (const key of keys) {
+        if (!current[key]) {
+          current[key] = {};
+        }
+        current = current[key];
+      }
+      
+      current[lastKey] = value;
+      return { ...prev };
+    });
+  }
 
   useEffect(() => {
     loadDocument();
@@ -74,12 +172,153 @@ export default function ReviewDetailPage() {
     }
   }
 
-  function handleFieldChange(field: string, value: any) {
-    setExtractedFields((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  function getAllFields(obj: any, prefix: string = '', level: number = 0): Array<{key: string, value: any, path: string, section: string, level: number, type: string}> {
+    const result: Array<{key: string, value: any, path: string, section: string, level: number, type: string}> = [];
+    
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const newKey = prefix ? `${prefix}.${key}` : key;
+        const value = obj[key];
+        const section = prefix.split('.')[0] || 'General';
+        
+        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+          // Add the object itself as a container
+          result.push({
+            key: key,
+            value: '',
+            path: newKey,
+            section: section,
+            level: level,
+            type: 'object'
+          });
+          // Recursively get nested object fields
+          result.push(...getAllFields(value, newKey, level + 1));
+        } else if (Array.isArray(value)) {
+          // Add the array as a container
+          result.push({
+            key: key,
+            value: value.length,
+            path: newKey,
+            section: section,
+            level: level,
+            type: 'array'
+          });
+          // Add array items as individual fields
+          value.forEach((item, index) => {
+            if (item !== null && typeof item === 'object') {
+              result.push({
+                key: `[${index}]`,
+                value: '',
+                path: `${newKey}[${index}]`,
+                section: section,
+                level: level + 1,
+                type: 'object'
+              });
+              result.push(...getAllFields(item, `${newKey}[${index}]`, level + 2));
+            } else {
+              result.push({
+                key: `[${index}]`,
+                value: item,
+                path: `${newKey}[${index}]`,
+                section: section,
+                level: level + 1,
+                type: 'value'
+              });
+            }
+          });
+        } else {
+          result.push({
+            key: key,
+            value: value,
+            path: newKey,
+            section: section,
+            level: level,
+            type: 'value'
+          });
+        }
+      }
+    }
+    
+    return result;
   }
+
+  function toggleSection(section: string) {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(section)) {
+        newSet.delete(section);
+      } else {
+        newSet.add(section);
+      }
+      return newSet;
+    });
+  }
+
+  function toggleField(path: string) {
+    setExpandedFields(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(path)) {
+        newSet.delete(path);
+      } else {
+        newSet.add(path);
+      }
+      return newSet;
+    });
+  }
+
+  function getFieldValue(path: string, obj: any): any {
+    const keys = path.split('.');
+    let current = obj;
+    for (const key of keys) {
+      if (current && current[key] !== undefined) {
+        current = current[key];
+      } else {
+        return undefined;
+      }
+    }
+    return current;
+  }
+
+  function handleFieldChange(field: string, value: any) {
+    setExtractedFields((prev) => {
+      // Handle nested field updates
+      const keys = field.split('.');
+      const lastKey = keys.pop()!;
+      
+      let current: any = prev;
+      for (const key of keys) {
+        if (!current[key]) {
+          current[key] = {};
+        }
+        current = current[key];
+      }
+      
+      current[lastKey] = value;
+      return { ...prev };
+    });
+  }
+
+  function shouldShowField(field: { path: string, level: number, type: string }): boolean {
+    if (field.level === 0) return true;
+    
+    // Get parent path
+    const pathParts = field.path.split('.');
+    const parentPath = pathParts.slice(0, -1).join('.');
+    
+    // Check if parent is expanded
+    return expandedFields.has(parentPath);
+  }
+
+  const allFields = document ? getAllFields(document.extractedFields) : [];
+  
+  // Group fields by section
+  const fieldsBySection = allFields.reduce((acc, field) => {
+    if (!acc[field.section]) {
+      acc[field.section] = [];
+    }
+    acc[field.section].push(field);
+    return acc;
+  }, {} as Record<string, typeof allFields>);
 
   if (loading) {
     return (
@@ -236,65 +475,117 @@ export default function ReviewDetailPage() {
               </div>
               <div className="p-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {Object.entries(document.extractedFields).map(([fieldName, value]) => {
-                      const confidenceScore = document.confidenceScores[fieldName as keyof typeof document.confidenceScores];
-                      const isDateField = fieldName.toLowerCase().includes('date');
-                      const isNumberField = fieldName.toLowerCase().includes('amount') || fieldName.toLowerCase().includes('price') || fieldName.toLowerCase().includes('total');
-                      const isArray = Array.isArray(value);
-                      const fieldValue = extractedFields[fieldName as keyof typeof extractedFields];
-                      const formattedLabel = fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace(/([A-Z])/g, ' $1');
-
-                      return (
-                        <div key={fieldName}>
-                          <label htmlFor={fieldName} className="block text-sm font-medium text-primary mb-2">
-                            <div className="flex items-center justify-between">
-                              <span>{formattedLabel}</span>
-                              {confidenceScore !== undefined && (
-                                <span className={`text-xs px-2 py-1 rounded-full ${
-                                  confidenceScore >= 0.8 ? 'bg-green-500/20 text-green-400' :
-                                  confidenceScore >= 0.5 ? 'bg-yellow-500/20 text-yellow-400' :
-                                  'bg-red-500/20 text-red-400'
-                                }`}>
-                                  {(confidenceScore * 100).toFixed(0)}% confidence
-                                </span>
-                              )}
-                            </div>
-                          </label>
-                          {isArray ? (
-                            <div className="mt-1 p-3 bg-card-secondary border border-card radius-md">
-                              <p className="text-sm text-secondary">Array field - {JSON.stringify(fieldValue)}</p>
-                            </div>
-                          ) : isDateField ? (
-                            <input
-                              id={fieldName}
-                              type="date"
-                              value={typeof fieldValue === 'string' ? fieldValue : ''}
-                              onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-                              className="mt-1 block w-full bg-card-secondary border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
-                            />
-                          ) : isNumberField ? (
-                            <input
-                              id={fieldName}
-                              type="number"
-                              step="0.01"
-                              value={typeof fieldValue === 'number' && !isNaN(fieldValue) ? fieldValue : ''}
-                              onChange={(e) => handleFieldChange(fieldName, parseFloat(e.target.value))}
-                              className="mt-1 block w-full bg-card-secondary border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
-                            />
-                          ) : (
-                            <input
-                              id={fieldName}
-                              type="text"
-                              value={typeof fieldValue === 'string' ? fieldValue : ''}
-                              onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-                              className="mt-1 block w-full bg-card-secondary border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
-                            />
-                          )}
+                  {Object.entries(fieldsBySection).map(([section, fields]) => (
+                    <div key={section} className="border border-card rounded-lg overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => toggleSection(section)}
+                        className="w-full px-4 py-3 bg-card-secondary border-b border-card flex items-center justify-between hover:bg-card transition-colors"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg font-semibold text-primary">
+                            {section.charAt(0).toUpperCase() + section.slice(1)}
+                          </span>
+                          <span className="text-xs text-muted">({fields.length} fields)</span>
                         </div>
-                      );
-                    })}
-                  </div>
+                        <svg
+                          className={`w-5 h-5 text-muted transition-transform ${expandedSections.has(section) ? 'rotate-180' : ''}`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      
+                      {expandedSections.has(section) && (
+                        <div className="p-4">
+                          {fields.map(({key, value, path, level, type}) => {
+                            if (!shouldShowField({path, level, type})) return null;
+                            
+                            const confidenceScore = document.confidenceScores[path as keyof typeof document.confidenceScores];
+                            const isDateField = key.toLowerCase().includes('date') || path.toLowerCase().includes('date');
+                            const isNumberField = key.toLowerCase().includes('amount') || key.toLowerCase().includes('price') || key.toLowerCase().includes('total') || path.toLowerCase().includes('amount') || path.toLowerCase().includes('price') || path.toLowerCase().includes('total');
+
+                            // Object/Array container
+                            if (type === 'object' || type === 'array') {
+                              return (
+                                <div key={path} className="mb-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleField(path)}
+                                    className={`flex items-center space-x-2 text-sm font-medium hover:text-accent-blue transition-colors ${expandedFields.has(path) ? 'text-accent-blue' : 'text-primary'}`}
+                                    style={{ marginLeft: `${level * 20}px` }}
+                                  >
+                                    <svg
+                                      className={`w-4 h-4 transition-transform ${expandedFields.has(path) ? 'rotate-90' : ''}`}
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                    <span className={`${type === 'array' ? 'text-purple-400' : 'text-blue-400'}`}>
+                                      {key}
+                                    </span>
+                                    {type === 'array' && (
+                                      <span className="text-xs text-muted">({value} items)</span>
+                                    )}
+                                  </button>
+                                </div>
+                              );
+                            }
+
+                            // Value field
+                            return (
+                              <div key={path} className="mb-3" style={{ marginLeft: `${level * 20}px` }}>
+                                <label htmlFor={path} className="block text-sm font-medium text-primary mb-1">
+                                  <div className="flex items-center justify-between">
+                                    <span>{key}</span>
+                                    {confidenceScore !== undefined && (
+                                      <span className={`text-xs px-2 py-1 rounded-full ${
+                                        confidenceScore >= 0.8 ? 'bg-green-500/20 text-green-400' :
+                                        confidenceScore >= 0.5 ? 'bg-yellow-500/20 text-yellow-400' :
+                                        'bg-red-500/20 text-red-400'
+                                      }`}>
+                                        {(confidenceScore * 100).toFixed(0)}%
+                                      </span>
+                                    )}
+                                  </div>
+                                </label>
+                                {isDateField ? (
+                                  <input
+                                    id={path}
+                                    type="date"
+                                    value={getFieldValue(path, extractedFields) || ''}
+                                    onChange={(e) => handleFieldChange(path, e.target.value)}
+                                    className="block w-full bg-card border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
+                                  />
+                                ) : isNumberField ? (
+                                  <input
+                                    id={path}
+                                    type="number"
+                                    step="0.01"
+                                    value={getFieldValue(path, extractedFields) || ''}
+                                    onChange={(e) => handleFieldChange(path, parseFloat(e.target.value))}
+                                    className="block w-full bg-card border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
+                                  />
+                                ) : (
+                                  <input
+                                    id={path}
+                                    type="text"
+                                    value={getFieldValue(path, extractedFields) || ''}
+                                    onChange={(e) => handleFieldChange(path, e.target.value)}
+                                    className="block w-full bg-card border border-card text-primary focus:border-accent-blue focus:ring-accent-blue sm:text-sm border p-2 radius-md transition-colors"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
 
                   <div>
                     <label htmlFor="comments" className="block text-sm font-medium text-primary mb-2">

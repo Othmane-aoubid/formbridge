@@ -5,15 +5,19 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel, EmailStr
+import secrets
 
 from app.core.config import settings
 from app.services.user_service import user_service
-from app.models.user import UserCreate, UserResponse as UserResponseModel
+from app.models.user import UserCreate, UserResponse as UserResponseModel, User
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+# Simple in-memory storage for password reset tokens (in production, use a database)
+password_reset_tokens = {}
 
 
 class UserRegister(BaseModel):
@@ -35,6 +39,15 @@ class UserResponse(BaseModel):
     last_name: str
     created_at: datetime
     updated_at: datetime
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -90,8 +103,11 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return Token(access_token=access_token, token_type="bearer")
 
 
-@router.get("/me", response_model=UserResponse)
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user_dependency(token: str = Depends(oauth2_scheme)) -> User:
+    """
+    Dependency to get the current authenticated user from JWT token.
+    Returns the user object for use in other endpoints.
+    """
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
         email: str = payload.get("sub")
@@ -107,6 +123,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         logger.warning(f"User not found: {email}")
         raise HTTPException(status_code=404, detail="User not found")
     
+    return user
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_endpoint(user = Depends(get_current_user_dependency)):
+    """
+    Get current user profile endpoint.
+    """
     return UserResponse(
         id=user.id,
         email=user.email,
@@ -115,3 +139,73 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         created_at=user.created_at,
         updated_at=user.updated_at
     )
+
+
+@router.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
+    """
+    Initiate password reset by generating a reset token.
+    In production, this would send an email with the reset link.
+    For now, returns the token for testing purposes.
+    """
+    user = await user_service.get_user_by_email(request.email)
+    if not user:
+        # Don't reveal if email exists or not for security
+        logger.info(f"Password reset requested for non-existent email: {request.email}")
+        return {"message": "If the email exists, a password reset link has been sent"}
+    
+    # Generate a secure random token
+    reset_token = secrets.token_urlsafe(32)
+    
+    # Store token with expiration (1 hour)
+    password_reset_tokens[reset_token] = {
+        "user_id": user.id,
+        "email": user.email,
+        "expires_at": datetime.utcnow() + timedelta(hours=1)
+    }
+    
+    logger.info(f"Password reset token generated for {request.email}")
+    
+    # In production, send email with reset link containing the token
+    # For now, return the token for testing
+    return {
+        "message": "Password reset link sent to email",
+        "reset_token": reset_token  # Remove this in production
+    }
+
+
+@router.post("/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    """
+    Reset password using a valid reset token.
+    """
+    if request.token not in password_reset_tokens:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    
+    token_data = password_reset_tokens[request.token]
+    
+    # Check if token is expired
+    if datetime.utcnow() > token_data["expires_at"]:
+        del password_reset_tokens[request.token]
+        raise HTTPException(status_code=400, detail="Reset token has expired")
+    
+    # Get user and update password
+    user = await user_service.get_user_by_email(token_data["email"])
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Hash new password
+    new_hashed_password = user_service.hash_password(request.new_password)
+    
+    # Update user password in database
+    password_updated = await user_service.update_user_password(token_data["email"], new_hashed_password)
+    
+    if not password_updated:
+        raise HTTPException(status_code=500, detail="Failed to update password")
+    
+    logger.info(f"Password reset successful for {token_data['email']}")
+    
+    # Remove used token
+    del password_reset_tokens[request.token]
+    
+    return {"message": "Password reset successful"}

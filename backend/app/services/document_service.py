@@ -87,6 +87,29 @@ class DocumentService:
             logger.error(f"Error getting document {document_id}: {str(e)}")
             return None
     
+    async def get_document_with_ownership_check(
+        self, 
+        document_id: str, 
+        user_id: str
+    ) -> Optional[DocumentResponse]:
+        """
+        Get a document by ID and verify ownership.
+        Returns None if document doesn't exist or doesn't belong to the user.
+        """
+        try:
+            item = self.container.read_item(item=document_id, partition_key=document_id)
+            document = DocumentResponse(**item)
+            
+            # Verify ownership - document must belong to the authenticated user
+            if document.created_by != user_id:
+                logger.warning(f"Ownership check failed for document {document_id}: user {user_id} does not own this document")
+                return None
+            
+            return document
+        except Exception as e:
+            logger.error(f"Error getting document {document_id}: {str(e)}")
+            return None
+    
     async def update_document(
         self,
         document_id: str,
@@ -153,14 +176,21 @@ class DocumentService:
 
     async def search_documents(
         self,
-        params: DocumentSearchParams
+        params: DocumentSearchParams,
+        user_id: Optional[str] = None
     ) -> List[DocumentResponse]:
         """
-        Search documents with filters
+        Search documents with filters.
+        If user_id is provided, only returns documents belonging to that user.
         """
         try:
             query_string = "SELECT * FROM c WHERE 1=1"
             parameters = []
+
+            # Add ownership filter if user_id is provided
+            if user_id:
+                query_string += " AND c.createdBy = @userId"
+                parameters.append({"name": "@userId", "value": user_id})
 
             if params.query:
                 query_string += " AND CONTAINS(c.filename, @query)"
@@ -187,3 +217,26 @@ class DocumentService:
         except Exception as e:
             logger.error(f"Error searching documents: {str(e)}")
             return []
+    
+    async def verify_documents_ownership(
+        self,
+        document_ids: List[str],
+        user_id: str
+    ) -> bool:
+        """
+        Verify that all documents in the list belong to the specified user.
+        Returns True only if ALL documents exist and belong to the user.
+        """
+        try:
+            for doc_id in document_ids:
+                document = await self.get_document(doc_id)
+                if not document:
+                    logger.warning(f"Document {doc_id} not found during ownership verification")
+                    return False
+                if document.created_by != user_id:
+                    logger.warning(f"Document {doc_id} does not belong to user {user_id}")
+                    return False
+            return True
+        except Exception as e:
+            logger.error(f"Error verifying documents ownership: {str(e)}")
+            return False

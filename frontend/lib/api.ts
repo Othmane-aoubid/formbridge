@@ -17,6 +17,15 @@ export interface TokenResponse {
   token_type: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string;
+}
+
 export interface UserResponse {
   id: string;
   email: string;
@@ -144,7 +153,18 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
+      let errorMessage = `API error: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch (e) {
+        // If parsing fails, use the status text
+      }
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -185,6 +205,20 @@ class ApiClient {
 
   async logout() {
     this.clearToken();
+  }
+
+  async forgotPassword(email: string): Promise<{ message: string; reset_token?: string }> {
+    return this.request<{ message: string; reset_token?: string }>('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, new_password: newPassword }),
+    });
   }
 
   async createUploadSas(document: DocumentCreate): Promise<UploadSasResponse> {

@@ -225,20 +225,14 @@ class AIExtractionService:
     
     def _sanitize_ocr_text(self, ocr_text: str, timing: Dict[str, Any]) -> str:
         """
-        Sanitize and truncate OCR text to avoid API errors
+        Sanitize OCR text - no truncation to ensure all pages are processed
         """
         stage_start = time.time()
         ocr_text = re.sub(r'[\x00-\x1f]', '', ocr_text)
         timing["ocr_sanitization"] = time.time() - stage_start
+        timing["ocr_length"] = len(ocr_text)
         
-        stage_start = time.time()
-        max_ocr_length = 6000
-        original_ocr_length = len(ocr_text)
-        if len(ocr_text) > max_ocr_length:
-            ocr_text = ocr_text[:max_ocr_length]
-            logger.warning(f"OCR text truncated to {max_ocr_length} characters for speed")
-        timing["ocr_truncation"] = time.time() - stage_start
-        timing["ocr_length_after_truncation"] = len(ocr_text)
+        logger.info(f"Processing {len(ocr_text)} characters for AI extraction (no truncation)")
         
         return ocr_text
     

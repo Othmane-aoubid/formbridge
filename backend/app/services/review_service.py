@@ -15,10 +15,12 @@ class ReviewService:
     
     async def get_review_queue(
         self,
-        params: ReviewQueueParams
+        params: ReviewQueueParams,
+        user_id: Optional[str] = None
     ) -> List[ReviewQueueItem]:
         """
-        Get documents pending review based on confidence threshold
+        Get documents pending review based on confidence threshold.
+        If user_id is provided, only returns documents belonging to that user.
         """
         try:
             search_params = DocumentSearchParams(
@@ -28,7 +30,7 @@ class ReviewService:
                 skip=params.skip,
                 limit=params.limit
             )
-            documents = await self.document_service.search_documents(search_params)
+            documents = await self.document_service.search_documents(search_params, user_id=user_id)
             
             # Filter by confidence threshold
             queue_items = []
@@ -60,12 +62,18 @@ class ReviewService:
             logger.error(f"Error getting review queue: {str(e)}")
             return []
     
-    async def get_review_document(self, document_id: str) -> Optional[ReviewResponse]:
+    async def get_review_document(self, document_id: str, user_id: Optional[str] = None) -> Optional[ReviewResponse]:
         """
-        Get document details for review
+        Get document details for review.
+        If user_id is provided, verifies document ownership.
         """
         try:
-            document = await self.document_service.get_document(document_id)
+            # Use ownership check if user_id is provided
+            if user_id:
+                document = await self.document_service.get_document_with_ownership_check(document_id, user_id)
+            else:
+                document = await self.document_service.get_document(document_id)
+            
             if not document:
                 return None
 
@@ -99,12 +107,21 @@ class ReviewService:
         document_id: str,
         corrected_fields: dict,
         reviewer_id: str,
-        comments: Optional[str] = None
+        comments: Optional[str] = None,
+        user_id: Optional[str] = None
     ) -> bool:
         """
-        Submit corrected fields and complete review
+        Submit corrected fields and complete review.
+        If user_id is provided, verifies document ownership before allowing review.
         """
         try:
+            # Verify ownership if user_id is provided
+            if user_id:
+                document = await self.document_service.get_document_with_ownership_check(document_id, user_id)
+                if not document:
+                    logger.warning(f"Ownership check failed for review submission on document {document_id}")
+                    return False
+            
             # Update document with corrected fields
             updates = {
                 "extractedFields": corrected_fields,
