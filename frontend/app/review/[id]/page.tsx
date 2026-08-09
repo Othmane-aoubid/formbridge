@@ -23,102 +23,6 @@ export default function ReviewDetailPage() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set());
 
-  function getAllFields(obj: any, prefix: string = ''): Array<{key: string, value: any, path: string, section: string}> {
-    const result: Array<{key: string, value: any, path: string, section: string}> = [];
-    
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        const newKey = prefix ? `${prefix}.${key}` : key;
-        const value = obj[key];
-        const section = prefix.split('.')[0] || 'General';
-        
-        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-          // Recursively get nested object fields
-          result.push(...getAllFields(value, newKey));
-        } else if (Array.isArray(value)) {
-          // Add array items as individual fields
-          value.forEach((item, index) => {
-            if (item !== null && typeof item === 'object') {
-              result.push(...getAllFields(item, `${newKey}[${index}]`));
-            } else {
-              result.push({
-                key: `${key}[${index}]`,
-                value: item,
-                path: newKey,
-                section: section
-              });
-            }
-          });
-        } else {
-          result.push({
-            key: key,
-            value: value,
-            path: newKey,
-            section: section
-          });
-        }
-      }
-    }
-    
-    return result;
-  }
-
-  function toggleSection(section: string) {
-    setExpandedSections(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(section)) {
-        newSet.delete(section);
-      } else {
-        newSet.add(section);
-      }
-      return newSet;
-    });
-  }
-
-  function toggleField(path: string) {
-    setExpandedFields(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(path)) {
-        newSet.delete(path);
-      } else {
-        newSet.add(path);
-      }
-      return newSet;
-    });
-  }
-
-  function getFieldValue(path: string, obj: any): any {
-    const keys = path.split('.');
-    let current = obj;
-    for (const key of keys) {
-      if (current && current[key] !== undefined) {
-        current = current[key];
-      } else {
-        return undefined;
-      }
-    }
-    return current;
-  }
-
-  function handleFieldChange(field: string, value: any) {
-    setExtractedFields((prev) => {
-      // Handle nested field updates
-      const keys = field.split('.');
-      const lastKey = keys.pop()!;
-      
-      let current: any = prev;
-      for (const key of keys) {
-        if (!current[key]) {
-          current[key] = {};
-        }
-        current = current[key];
-      }
-      
-      current[lastKey] = value;
-      return { ...prev };
-    });
-  }
-
   useEffect(() => {
     loadDocument();
     
@@ -172,69 +76,74 @@ export default function ReviewDetailPage() {
     }
   }
 
-  function getAllFields(obj: any, prefix: string = '', level: number = 0): Array<{key: string, value: any, path: string, section: string, level: number, type: string}> {
-    const result: Array<{key: string, value: any, path: string, section: string, level: number, type: string}> = [];
+  function isPlainObject(value: any): boolean {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  type FieldInfo = {
+    key: string;
+    value: any;
+    path: string;
+    section: string;
+    level: number;
+    type: string;
+  };
+
+  type ProcessParams = {
+    key: string;
+    value: any;
+    newKey: string;
+    section: string;
+    level: number;
+    result: FieldInfo[];
+  };
+
+  function createFieldInfo(params: { key: string; value: any; path: string; section: string; level: number; type: string }): FieldInfo {
+    return params;
+  }
+
+  function getSection(prefix: string): string {
+    return prefix.split('.')[0] || 'General';
+  }
+
+  function processObject(params: ProcessParams): void {
+    params.result.push(createFieldInfo({ key: params.key, value: '', path: params.newKey, section: params.section, level: params.level, type: 'object' }));
+    params.result.push(...getAllFields(params.value, params.newKey, params.level + 1));
+  }
+
+  function processArray(params: ProcessParams): void {
+    params.result.push(createFieldInfo({ key: params.key, value: (params.value as any[]).length, path: params.newKey, section: params.section, level: params.level, type: 'array' }));
+    
+    (params.value as any[]).forEach((item, index) => {
+      const itemPath = `${params.newKey}[${index}]`;
+      if (isPlainObject(item)) {
+        params.result.push(createFieldInfo({ key: `[${index}]`, value: '', path: itemPath, section: params.section, level: params.level + 1, type: 'object' }));
+        params.result.push(...getAllFields(item, itemPath, params.level + 2));
+      } else {
+        params.result.push(createFieldInfo({ key: `[${index}]`, value: item, path: itemPath, section: params.section, level: params.level + 1, type: 'value' }));
+      }
+    });
+  }
+
+  function processValue(params: ProcessParams): void {
+    params.result.push(createFieldInfo({ key: params.key, value: params.value, path: params.newKey, section: params.section, level: params.level, type: 'value' }));
+  }
+
+  function getAllFields(obj: any, prefix: string = '', level: number = 0): FieldInfo[] {
+    const result: FieldInfo[] = [];
     
     for (const key in obj) {
       if (obj.hasOwnProperty(key)) {
         const newKey = prefix ? `${prefix}.${key}` : key;
         const value = obj[key];
-        const section = prefix.split('.')[0] || 'General';
+        const section = getSection(prefix);
         
-        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-          // Add the object itself as a container
-          result.push({
-            key: key,
-            value: '',
-            path: newKey,
-            section: section,
-            level: level,
-            type: 'object'
-          });
-          // Recursively get nested object fields
-          result.push(...getAllFields(value, newKey, level + 1));
+        if (isPlainObject(value)) {
+          processObject({ key, value, newKey, section, level, result });
         } else if (Array.isArray(value)) {
-          // Add the array as a container
-          result.push({
-            key: key,
-            value: value.length,
-            path: newKey,
-            section: section,
-            level: level,
-            type: 'array'
-          });
-          // Add array items as individual fields
-          value.forEach((item, index) => {
-            if (item !== null && typeof item === 'object') {
-              result.push({
-                key: `[${index}]`,
-                value: '',
-                path: `${newKey}[${index}]`,
-                section: section,
-                level: level + 1,
-                type: 'object'
-              });
-              result.push(...getAllFields(item, `${newKey}[${index}]`, level + 2));
-            } else {
-              result.push({
-                key: `[${index}]`,
-                value: item,
-                path: `${newKey}[${index}]`,
-                section: section,
-                level: level + 1,
-                type: 'value'
-              });
-            }
-          });
+          processArray({ key, value, newKey, section, level, result });
         } else {
-          result.push({
-            key: key,
-            value: value,
-            path: newKey,
-            section: section,
-            level: level,
-            type: 'value'
-          });
+          processValue({ key, value, newKey, section, level, result });
         }
       }
     }
@@ -242,28 +151,24 @@ export default function ReviewDetailPage() {
     return result;
   }
 
-  function toggleSection(section: string) {
-    setExpandedSections(prev => {
+  function toggleSetItem(setter: React.Dispatch<React.SetStateAction<Set<string>>>, item: string) {
+    setter(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(section)) {
-        newSet.delete(section);
+      if (newSet.has(item)) {
+        newSet.delete(item);
       } else {
-        newSet.add(section);
+        newSet.add(item);
       }
       return newSet;
     });
   }
 
+  function toggleSection(section: string) {
+    toggleSetItem(setExpandedSections, section);
+  }
+
   function toggleField(path: string) {
-    setExpandedFields(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(path)) {
-        newSet.delete(path);
-      } else {
-        newSet.add(path);
-      }
-      return newSet;
-    });
+    toggleSetItem(setExpandedFields, path);
   }
 
   function getFieldValue(path: string, obj: any): any {
